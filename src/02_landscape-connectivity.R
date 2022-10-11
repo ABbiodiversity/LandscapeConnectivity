@@ -39,15 +39,17 @@ source("src/landscape-connectivity_functions.R")
 # Define HUC units, and cost matrix
 HFI <- 2018
 huc.unit <- 8
-watershed.costs <- read_sf("data/processed/huc-8/2018/movecost/huc-8-movecost_2018_2022-08-24.shp")
+watershed.costs <- read_sf("data/processed/huc-8/2018/movecost/huc-8-movecost_2018_2022-09-17.shp")
 watershed.ids <- unique(watershed.costs$HUC_8)
 
 # Define threshold for the probability distribution.
-# Threshold equals 5% probability of reach the distance threshold (100m; log(0.05) / 100)
+# Threshold equals 5% probability of reach the distance threshold (150m; log(0.05) / 150)
 # Threshold equals 5% probability of reach the distance threshold (250m; log(0.05) / 250)
+# Threshold equals 5% probability of reach the distance threshold (300m; log(0.05) / 300)
+# Threshold equals 5% probability of reach the distance threshold (500m; log(0.05) / 500)
 
-threshold.list <- c(log(0.05) / 100 , log(0.05) / 250)
-names(threshold.list) <- c("Dist_100", "Dist_250")
+threshold.list <- c(log(0.05) / 150 , log(0.05) / 250, log(0.05) / 300, log(0.05) / 500)
+names(threshold.list) <- c("Dist_150", "Dist_250", "Dist_300", "Dist_500")
 
 # Initialize arcpy
 py_discover_config() # We need version 3.7
@@ -71,413 +73,59 @@ habitat.list <- list(UpCur = results.matrix,
                      UpRef = results.matrix,
                      LowRef = results.matrix,
                      GrRef = results.matrix)
-results.list <- list(Dist_100 = habitat.list,
-                     Dist_250 = habitat.list)
+results.list <- list(Dist_250 = habitat.list,
+                     Dist_Multi = habitat.list)
 
 # For each HUC in the layer, calculate connectivity
-for (boundary.id in watershed.ids) {
+for (HUC in watershed.ids) {
         
-        # Load the patch layer
-        patch.native <- read_sf(paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/", boundary.id, "_current_landcover.shp"))
-        total.area <- read_sf(paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/", boundary.id, "_boundary.shp"))
-        total.area <- round(as.numeric(st_area(total.area)) / 1000000, 3) # convert to km2
-        
-        # If the native patch has 0 polygons, write the results as 100 connectivity and give the total area in km2
-        if (nrow(patch.native) == 0) {
-                
-                for (disp.id in names(results.list)) {
-                        
-                        for(habitat.id in names(results.list[[disp.id]])) {
-                                
-                                results.list[[disp.id]][[habitat.id]][boundary.id, "HUC_8"] <- c(boundary.id)
-                                results.list[[disp.id]][[habitat.id]][boundary.id, "ECA"] <- NA
-                                results.list[[disp.id]][[habitat.id]][boundary.id, "Habitat_Area"] <- NA
-                                results.list[[disp.id]][[habitat.id]][boundary.id, "Watershed_Area"] <- total.area
-                                
-                        }
-       
-                }
-                
-                next() # Skip to the next watershed
-                
-        }
-        
-        # Identify which native landcovers are present
-        native.covers <- unique(patch.native$FEATURE_TY)[unique(patch.native$FEATURE_TY) %in% c("Grassland", "LowlandForest")]
-        
-        if("MixDecid" %in% unique(patch.native$FEATURE_TY) | "PineSpruce" %in% unique(patch.native$FEATURE_TY)) {
-                
-                native.covers <- c(native.covers, "UplandForest")
-                
-        }
-        
-        patch.all <- patch.native
-        
-        # Loop through each landcover type
-        for (native.type in native.covers) {
-                
-                # Remove files incase they were note previously removed
-                arcpy$Delete_management(in_data = paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/", boundary.id, "_", native.type, "_current_cleaned.shp"))
-                arcpy$Delete_management(in_data = paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/", boundary.id, "_", native.type, "_current_predissolve.shp"))
-                arcpy$Delete_management(in_data = paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/distmatrix.dbf"))
-                
-                # Subset the patches
-                if(native.type == "UplandForest") {
-                        
-                        patch.native <- patch.all[patch.all$FEATURE_TY %in% c("MixDecid", "MixDecid20", "MixDecid40", "MixDecid60",
-                                                                              "PineSpruce", "PineSpruce20", "PineSpruce40", "PineSpruce60"), ]
-                        
-                } else {
-                        
-                        patch.native <- patch.all[patch.all$FEATURE_TY %in% native.type, ]
-                        
-                }
-                
-                ################## Question: Should we merge MixDecid and PineSpruce stands together once they age out?
-                # DECISION POINT # Implementation: We currently merge fully recovered native stands back together. 
-                ################## Final Decision: Not made.
-                
-                patch.native$FEATURE_TY[patch.native$FEATURE_TY %in% c("MixDecid", "PineSpruce")] <- "UplandForest"
-                
-                # Dissolve patches together
-                write_sf(obj = patch.native, 
-                         dsn = paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/", boundary.id, "_", native.type, "_current_predissolve.shp"))
-                
-                arcpy$PairwiseDissolve_analysis(in_features = paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/", boundary.id, "_", native.type, "_current_predissolve.shp"), 
-                                                out_feature_class = paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/", boundary.id, "_", native.type, "_current_cleaned.shp"), 
-                                                dissolve_field = "FEATURE_TY", 
-                                                multi_part = "SINGLE_PART")
-                
-                # Update the area of each patch (m2)
-                patch.native <- read_sf(paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/", boundary.id, "_", native.type, "_current_cleaned.shp"))
-                patch.native <- st_cast(x = patch.native, to = "POLYGON", warn = FALSE)
-                patch.native[["SHAPE_area"]] <- round(as.numeric(st_area(patch.native)))
-                patch.native[["FEATURE_TY"]] <- "Native"
-                
-                ################## Question: Should all native polygons be considered patches regardless of their size?
-                # DECISION POINT # Implementation: We currently remove any patch smaller than 10000m2 (1 hectares).
-                ################## Final Decision: Not made.
-                
-                patch.native <- patch.native[!(patch.native$SHAPE_area <= 10000), ] # 1 ha filter
-                patch.native$SHAPE_area <- round(as.numeric(st_area(patch.native)) / 1000000, 3) # convert to km2
-                
-                # After filtering if there are no native patches remove
-                if (nrow(patch.native) == 0) {next}
-                
-                patch.native[["OBJECTID"]] <- 1:nrow(patch.native)
-                patch.native <- patch.native[, c("OBJECTID", "SHAPE_area", "geometry")]
-                
-                write_sf(obj = patch.native, dsn = paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/", boundary.id, "_", native.type, "_current_cleaned.shp"))
-                
-                ################## Question: How should distances between polygons be calculated e.g., (centroid, edge-edge)?
-                # DECISION POINT # Implementation: Distance between polygons is calculated based edge-edge distance. (Still investigating this is true)
-                ################## Final Decision: Edge-edge distances are used.
-                
-                ################## Question: When determining if direct connections are possible between polygons, should we implement a threshold?
-                # DECISION POINT # Implementation: We currently define direct connections as 2x the dispersal distance.
-                ################## Final Decision: 2x the dispersal distance (250 dispersal, 500 maximum)
-                
-                # Using a distance that is 2x the maximum distance tested (Choosing only 500, twice maximum dispersal)
-                arcpy$GenerateNearTable_analysis(in_features = paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/", boundary.id, "_", native.type, "_current_cleaned.shp"),
-                                                 near_features = paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/", boundary.id, "_", native.type, "_current_cleaned.shp"),
-                                                 out_table = paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/distmatrix.dbf"),
-                                                 search_radius = "500 Meters",
-                                                 closest = "ALL",
-                                                 method = "GEODESIC")
-                
-                # Load the distance matrix into memory
-                patch.dist <- read.dbf(paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/distmatrix.dbf"))
-                patch.dist$IN_FID <- patch.dist$IN_FID + 1 # Add one so that the matches the rows in the patch.habitat file.
-                patch.dist$NEAR_FID <- patch.dist$NEAR_FID + 1
-                
-                # There are going to be patches that are not connected to any other patch. Add them to the patch distance file. 
-                # NEAR_DIST will be given a value of 0
-                
-                isolated.patched <- patch.native$OBJECTID[!(patch.native$OBJECTID %in% unique(c(patch.dist$IN_FID, patch.dist$NEAR_FID)))]
-                
-                for(isolated.id in isolated.patched) {
-                        
-                        patch.dist <- rbind(patch.dist, c(isolated.id, isolated.id, 0, 1))
-                        
-                }
-                
-                # Extract the mean cost for the HUC
-                col.id <- ifelse(native.type == "Grassland", "GrCur",
-                                 ifelse(native.type == "UplandForest", "UpCur", "LowCur"))
-                mean.cost <- as.data.frame(watershed.costs[watershed.costs$HUC_8 == boundary.id, col.id])[1,1]
-                
-                # Multiply the distance by the mean cost distance
-                # Apply threshold for creating the probability distribution
-                
-                for(dist.id in names(threshold.list)) {
-                        
-                        patch.dist["Weight"] <- exp(as.numeric(threshold.list[dist.id]) * (patch.dist$NEAR_DIST * mean.cost))
-                        
-                        # Convert weights to the log scale
-                        patch.dist$Log <- log(patch.dist$Weight) * -1
-                        
-                        # Define a dataframe of patch properties
-                        patch.habitat <- data.frame(Native = as.numeric(patch.native$SHAPE_area))
-                        
-                        ##########################
-                        # Calculate Connectivity #
-                        ##########################
-                        
-                        # Create graph, make sure to add vertice flag
-                        landscape.matrix <- graph_from_data_frame(d = patch.dist[, 1:2], vertices = patch.native$OBJECTID)
-                        E(landscape.matrix)$weight <- patch.dist$Log # Add weights
-                        
-                        # Calculate index and store required results
-                        
-                        results.list[[dist.id]][[col.id]][boundary.id, "HUC_8"] <- c(boundary.id)
-                        
-                        #
-                        # Matrix Version
-                        #
-                        
-                        if(estimate.memory(dat = c(nrow(patch.habitat), nrow(patch.habitat)), unit = "gb") < 10) {
-                                
-                                # Create habitat matrix
-                                habitat.matrix <- outer(patch.habitat$Native, patch.habitat$Native, FUN = "*")
-                                
-                                # Using the network with predefined weights, calculate the shortest path between all patches
-                                # Assumes that the distances between patches are probabilities converted to the log scale.
-                                dist.matrix <- distances(graph = landscape.matrix) 
-                                dist.matrix <- exp(dist.matrix * -1) # Convert back to probability
-                                
-                                matrix.sum <- rowSums(habitat.matrix * dist.matrix)
-                                
-                                results.list[[dist.id]][[col.id]][boundary.id, "ECA"] <- sqrt(sum(matrix.sum))
-                                
-                                results.list[[dist.id]][[col.id]][boundary.id, "ECA_Watershed"] <- 100 * (sqrt(sum(matrix.sum))/ total.area)
-                                
-                                results.list[[dist.id]][[col.id]][boundary.id, "Native_Cover"] <- 100 * (sum(patch.habitat) / total.area)
-                                
-                                results.list[[dist.id]][[col.id]][boundary.id, "Total_Area"] <- total.area
-                                
-                                # Append the polygon results
-                                patch.native[dist.id] <- matrix.sum
-                                write_sf(obj = patch.native, dsn = paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/", boundary.id, "_", native.type, "_current_qsfinal.shp"))
-                                rm(landscape.matrix, patch.habitat, dist.matrix, habitat.matrix, matrix.sum)
-                                
-                        }
-                        
+  # Prepare the native layers based on dispersal distance
+  # This is separated into two loops incase a landcover is present in reference, but completely removed under current conditions.
+  native.classes <- data_prep(status = "Current",
+                              HUC.scale = huc.unit,
+                              HUC.id = HUC,
+                              HFI.year = HFI,
+                              arcpy = arcpy)
+  
+  for (native.type in native.classes) {
+    
+    results.list <- landscape_connectivity_2.0(status = "Current",
+                                               native.type = native.type,
+                                               watershed.costs = watershed.costs,
+                                               dist.values = threshold.list,
+                                               HUC.scale = huc.unit,
+                                               HUC.id = HUC,
+                                               HFI.year = HFI,
+                                               results = results.list, 
+                                               arcpy = arcpy)
 
-                }
-                
-                # Write after each version incase a watershed fails
-                save(results.list, file = paste0("results/tables/landscape-connectivity_1ha_HFI2018_2022-08-31.Rdata"))
-                
-                # Remove files that were created
-                arcpy$Delete_management(in_data = paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/", boundary.id, "_", native.type, "_current_cleaned.shp"))
-                arcpy$Delete_management(in_data = paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/", boundary.id, "_", native.type, "_current_predissolve.shp"))
-                arcpy$Delete_management(in_data = paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/distmatrix.dbf"))
-                
-                rm(patch.dist)
-                print(boundary.id)
-                
-        }
-        
-}
+  }
+  
+  # Prepare the reference layers based on dispersal distance
+  native.classes <- data_prep(status = "Reference",
+                              HUC.scale = huc.unit,
+                              HUC.id = HUC,
+                              HFI.year = HFI,
+                              arcpy = arcpy)
+  
+  for (native.type in native.classes) {
+    
+    results.list <- landscape_connectivity_2.0(status = "Reference",
+                                               native.type = native.type,
+                                               watershed.costs = watershed.costs,
+                                               dist.values = threshold.list,
+                                               HUC.scale = huc.unit,
+                                               HUC.id = HUC,
+                                               HFI.year = HFI,
+                                               results = results.list, 
+                                               arcpy = arcpy)
 
-print("Reference")
+  }
+  
+  # Save each watershed iteration
+  save(results.list, file = paste0("results/tables/connectivity_HFI", HFI, "_2022-09-27.RData"))
 
-# For each HUC in the layer, calculate connectivity
-for (boundary.id in watershed.ids) {
-        
-        # Load the patch layer
-        patch.native <- read_sf(paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/", boundary.id, "_reference_landcover.shp"))
-        total.area <- read_sf(paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/", boundary.id, "_boundary.shp"))
-        total.area <- round(as.numeric(st_area(total.area)) / 1000000, 3) # convert to km2
-        
-        for (disp.id in names(results.list)) {
-                
-                for(habitat.id in names(results.list[[disp.id]])) {
-                        
-                        results.list[[disp.id]][[habitat.id]][boundary.id, "HUC_8"] <- c(boundary.id)
-                        results.list[[disp.id]][[habitat.id]][boundary.id, "ECA"] <- NA
-                        results.list[[disp.id]][[habitat.id]][boundary.id, "Habitat_Area"] <- NA
-                        results.list[[disp.id]][[habitat.id]][boundary.id, "Watershed_Area"] <- total.area
-                        
-                }
-                
-        }
-        
-        # Identify which native landcovers are present
-        native.covers <- unique(patch.native$HABITAT)[unique(patch.native$HABITAT) %in% c("Grassland", "LowlandForest")]
-        
-        if("MixDecid" %in% unique(patch.native$HABITAT) | "PineSpruce" %in% unique(patch.native$HABITAT)) {
-                
-                native.covers <- c(native.covers, "UplandForest")
-                
-        }
-        
-        patch.all <- patch.native
-        
-        # Loop through each landcover type
-        for (native.type in native.covers) {
-                
-                # Remove files that were created
-                arcpy$Delete_management(in_data = paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/", boundary.id, "_", native.type, "_reference_cleaned.shp"))
-                arcpy$Delete_management(in_data = paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/", boundary.id, "_", native.type, "_reference_predissolve.shp"))
-                arcpy$Delete_management(in_data = paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/distmatrix.dbf"))
-                
-                # Subset the patches
-                if(native.type == "UplandForest") {
-                        
-                        patch.native <- patch.all[patch.all$HABITAT %in% c("MixDecid", "MixDecid20", "MixDecid40", "MixDecid60",
-                                                                              "PineSpruce", "PineSpruce20", "PineSpruce40", "PineSpruce60"), ]
-                        
-                } else {
-                        
-                        patch.native <- patch.all[patch.all$HABITAT %in% native.type, ]
-                        
-                }
-                
-                ################## Question: Should we merge MixDecid and PineSpruce stands together once they age out?
-                # DECISION POINT # Implementation: We currently merge fully recovered native stands back together. 
-                ################## Final Decision: Not made.
-                
-                patch.native$HABITAT[patch.native$HABITAT %in% c("MixDecid", "PineSpruce")] <- "UplandForest"
-                
-                # Dissolve patches together
-                write_sf(obj = patch.native, 
-                         dsn = paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/", boundary.id, "_", native.type, "_reference_predissolve.shp"))
-                
-                arcpy$PairwiseDissolve_analysis(in_features = paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/", boundary.id, "_", native.type, "_reference_predissolve.shp"), 
-                                                out_feature_class = paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/", boundary.id, "_", native.type, "_reference_cleaned.shp"), 
-                                                dissolve_field = "HABITAT", 
-                                                multi_part = "SINGLE_PART")
-                
-                # Update the area of each patch (m2)
-                patch.native <- read_sf(paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/", boundary.id, "_", native.type, "_reference_cleaned.shp"))
-                patch.native <- st_cast(x = patch.native, to = "POLYGON", warn = FALSE)
-                patch.native[["SHAPE_area"]] <- round(as.numeric(st_area(patch.native)))
-                patch.native[["FEATURE_TY"]] <- "Native"
-                
-                ################## Question: Should all native polygons be considered patches regardless of their size?
-                # DECISION POINT # Implementation: We currently remove any patch smaller than 10000m2 (1 hectares).
-                ################## Final Decision: Not made.
-                
-                patch.native <- patch.native[!(patch.native$SHAPE_area <= 647497), ] # FLAG!! RUNNING FOR 1/4 SECTION
-                patch.native$SHAPE_area <- round(as.numeric(st_area(patch.native)) / 1000000, 3) # convert to km2
-                
-                # After filtering if there are no native patches remove
-                if (nrow(patch.native) == 0) {next}
-                
-                patch.native[["OBJECTID"]] <- 1:nrow(patch.native)
-                patch.native <- patch.native[, c("OBJECTID", "SHAPE_area", "geometry")]
-                
-                write_sf(obj = patch.native, dsn = paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/", boundary.id, "_", native.type, "_reference_cleaned.shp"))
-                
-                ################## Question: How should distances between polygons be calculated e.g., (centroid, edge-edge)?
-                # DECISION POINT # Implementation: Distance between polygons is calculated based edge-edge distance. (Still investigating this is true)
-                ################## Final Decision: Edge-edge distances are used.
-                
-                ################## Question: When determining if direct connections are possible between polygons, should we implement a threshold?
-                # DECISION POINT # Implementation: We currently define direct connections as 2x the dispersal distance.
-                ################## Final Decision: 2x the dispersal distance (250 dispersal, 500 maximum)
-                
-                # Using a distance that is 2x the maximum distance tested (Choosing only 500, twice maximum dispersal)
-                arcpy$GenerateNearTable_analysis(in_features = paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/", boundary.id, "_", native.type, "_reference_cleaned.shp"),
-                                                 near_features = paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/", boundary.id, "_", native.type, "_reference_cleaned.shp"),
-                                                 out_table = paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/distmatrix.dbf"),
-                                                 search_radius = "500 Meters",
-                                                 closest = "ALL",
-                                                 method = "GEODESIC")
-                
-                # Load the distance matrix into memory
-                patch.dist <- read.dbf(paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/distmatrix.dbf"))
-                patch.dist$IN_FID <- patch.dist$IN_FID + 1 # Add one so that the matches the rows in the patch.habitat file.
-                patch.dist$NEAR_FID <- patch.dist$NEAR_FID + 1
-                
-                # There are going to be patches that are not connected to any other patch. Add them to the patch distance file. 
-                # NEAR_DIST will be given a value of 0
-                
-                isolated.patched <- patch.native$OBJECTID[!(patch.native$OBJECTID %in% unique(c(patch.dist$IN_FID, patch.dist$NEAR_FID)))]
-                
-                for(isolated.id in isolated.patched) {
-                        
-                        patch.dist <- rbind(patch.dist, c(isolated.id, isolated.id, 0, 1))
-                        
-                }
-                
-                # Extract the mean cost for the HUC
-                col.id <- ifelse(native.type == "Grassland", "GrRef",
-                                 ifelse(native.type == "UplandForest", "UpRef", "LowRef"))
-                mean.cost <- as.data.frame(watershed.costs[watershed.costs$HUC_8 == boundary.id, col.id])[1,1]
-                
-                # Multiply the distance by the mean cost distance
-                # Apply threshold for creating the probability distribution
-                
-                for(dist.id in names(threshold.list)) {
-                        
-                        patch.dist["Weight"] <- exp(as.numeric(threshold.list[dist.id]) * (patch.dist$NEAR_DIST * mean.cost))
-                        
-                        # Convert weights to the log scale
-                        patch.dist$Log <- log(patch.dist$Weight) * -1
-                        
-                        # Define a dataframe of patch properties
-                        patch.habitat <- data.frame(Native = as.numeric(patch.native$SHAPE_area))
-                        
-                        ##########################
-                        # Calculate Connectivity #
-                        ##########################
-                        
-                        # Create graph, make sure to add vertice flag
-                        landscape.matrix <- graph_from_data_frame(d = patch.dist[, 1:2], vertices = patch.native$OBJECTID)
-                        E(landscape.matrix)$weight <- patch.dist$Log # Add weights
-                        
-                        # Calculate index and store required results
-                        
-                        results.list[[dist.id]][[col.id]][boundary.id, "HUC_8"] <- c(boundary.id)
-                        
-                        #
-                        # Matrix Version
-                        #
-                        
-                        if(estimate.memory(dat = c(nrow(patch.habitat), nrow(patch.habitat)), unit = "gb") < 10) {
-                                
-                                # Create habitat matrix
-                                habitat.matrix <- outer(patch.habitat$Native, patch.habitat$Native, FUN = "*")
-                                
-                                # Using the network with predefined weights, calculate the shortest path between all patches
-                                # Assumes that the distances between patches are probabilities converted to the log scale.
-                                dist.matrix <- distances(graph = landscape.matrix) 
-                                dist.matrix <- exp(dist.matrix * -1) # Convert back to probability
-                                
-                                matrix.sum <- rowSums(habitat.matrix * dist.matrix)
-                                
-                                results.list[[dist.id]][[col.id]][boundary.id, "ECA"] <- sqrt(sum(matrix.sum))
-                                
-                                results.list[[dist.id]][[col.id]][boundary.id, "ECA_Watershed"] <- 100 * (sqrt(sum(matrix.sum))/ total.area)
-                                
-                                results.list[[dist.id]][[col.id]][boundary.id, "Native_Cover"] <- 100 * (sum(patch.habitat) / total.area)
-                                
-                                results.list[[dist.id]][[col.id]][boundary.id, "Total_Area"] <- total.area
-                                
-                                # Append the polygon results
-                                patch.native[dist.id] <- matrix.sum
-                                write_sf(obj = patch.native, dsn = paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/", boundary.id, "_", native.type, "_reference_qsfinal.shp"))
-                                rm(landscape.matrix, patch.habitat, dist.matrix, habitat.matrix, matrix.sum)
-                                
-                        }
-                        
-                        
-                }
-                
-                # Write after each version incase a watershed fails
-                save(results.list, file = paste0("results/tables/landscape-connectivity_1ha_HFI2018_2022-08-31.Rdata"))
-                
-                # Remove files that were created
-                arcpy$Delete_management(in_data = paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/", boundary.id, "_", native.type, "_reference_cleaned.shp"))
-                arcpy$Delete_management(in_data = paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/", boundary.id, "_", native.type, "_reference_predissolve.shp"))
-                arcpy$Delete_management(in_data = paste0("data/processed/huc-", huc.unit, "/", HFI, "/gis/", boundary.id, "/distmatrix.dbf"))
-                
-                rm(patch.dist)
-                print(boundary.id)
-                
-        }
+  print(HUC)
         
 }
 
