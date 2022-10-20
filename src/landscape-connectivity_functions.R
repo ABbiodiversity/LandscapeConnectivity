@@ -12,6 +12,7 @@
 #
 
 # THIS DOES NOT PROPERLY INCORPORATE HARVEST REGENERATION
+# Might be able to simplify the script
 
 ####################
 # Data preparation #
