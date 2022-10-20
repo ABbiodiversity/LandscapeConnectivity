@@ -1,7 +1,7 @@
 #
 # Title: Data cleaning for the landscape connectivity indicator
 # Created: February 4th, 2022
-# Last Updated: September 16th, 2022
+# Last Updated: October 20th, 2022
 # Author: Brandon Allen
 # Objectives: Clean GIS data required for creating the landscape connectivity indicator. 
 # Keywords: Notes, Initialization
@@ -38,10 +38,10 @@ watershed.ids <- read_sf("data/base/gis/boundaries/HUC_8_EPSG3400.shp")
 watershed.ids <- watershed.ids$HUC_8
 
 # Landcover lookup
-landcover.classes <- read.csv("data/lookup/landcover-classification_2021-11-17.csv")
+landcover.classes <- read.csv("data/lookup/landcover-classification.csv")
 
 # Load barriers information
-barrier.costs <- read_excel("data/lookup/landscape-connectivity-resistance-final_2021-05-17.xlsx", 
+barrier.costs <- read_excel("data/lookup/landcover-resistance.xlsx", 
                             sheet = "resistance")
 
 # Create the scaled barrier costs for each habitat type
@@ -52,16 +52,8 @@ barrier.costs$GrasslandCost <- rescale(x = barrier.costs$AD_HF, to = c(1,10)) # 
 # Update resistance costs for non-like habitat types (Grassland -> Upland Forest -> Lowland Forest)
 # Values were approximated from the Scotland paper
 barrier.costs$UplandCost[match(c("LowlandForest", "Grassland"), barrier.costs$FEATURE_TY_ABMI)] <- c(1.75, 2.5) 
-barrier.costs$LowlandCost[match(c("UplandForest", "Grassland"), barrier.costs$FEATURE_TY_ABMI)] <- c(1.75, 1.75)
-barrier.costs$GrasslandCost[match(c("UplandForest", "LowlandForest"), barrier.costs$FEATURE_TY_ABMI)] <- c(4.375, 3.2)
-
-# Add the individual stand values
-barrier.costs[barrier.costs$FEATURE_TY_MARREC %in% c("Spruce", "Spruce20", "Spruce40", "Spruce60",
-                                                     "Pine", "Pine20", "Pine40", "Pine60",
-                                                     "Decid", "Decid20", "Decid40", "Decid60",
-                                                     "Mixedwood", "Mixedwood20" , "Mixedwood40" , "Mixedwood60"), c("UplandCost", 
-                                                                                                                    "LowlandCost",
-                                                                                                                    "GrasslandCost")] <- barrier.costs[barrier.costs$FEATURE_TY_MARREC %in% c("UplandForest"), c("UplandCost", "LowlandCost","GrasslandCost")]
+barrier.costs$LowlandCost[match(c("Grassland", "UplandForest", "PineSpruce", "MixDecid"), barrier.costs$FEATURE_TY_ABMI)] <- c(1.75, 1.75, 1.75, 1.75)
+barrier.costs$GrasslandCost[match(c("LowlandForest", "UplandForest", "PineSpruce", "MixDecid"), barrier.costs$FEATURE_TY_ABMI)] <- c(4.375, 3.2, 3.2, 3.2)
 
 # Create shapefile for storing movement cost results
 # No movement cost should ever be 0, so this will flag if watersheds are not processed
@@ -90,16 +82,9 @@ arcpy <- import('arcpy')
 # Define parallel processing factor
 arcpy$env$parallelProcessingFactor <- "100%"
 
-# In theory, we will be performing all work within the geodatabases. Therefore we shouldn't have this issue. Keep it in mind though.
-# Define the scratch space otherwise functions without defined outputs will fail 
-# scratch.space <- "C:/Users/ballen/Desktop/LandscapeConnectivity/data/processed/huc-8/2018/scratch/"
-# arcpy$env$scratchWorkspace <- scratch.space
-
 ########################
 # Landscape Extraction #
 ########################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-# Path to landcover layer # \\gisserver.abmi.ca\GIS\Landcover\Backfill\backfilledV61\veg61hf2018_bdqt.gdb
 
 for (HUC in watershed.ids) { 
   

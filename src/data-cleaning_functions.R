@@ -7,8 +7,6 @@
 # Keywords: Landscape cleaning, Cost assign, Cost distance
 #
 
-# THIS DOES NOT PROPERLY INCORPORATE HARVEST REGENERATION
-
 ######################
 # Landscape cleaning # 
 ######################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -158,17 +156,16 @@ def Reclass(arg):
     
     if(row[[1]] == "HARVEST-AREA") {
       
-      # Harvest areas with resistance (0-20 years)
-      if(row[[2]] == 0) {row[[1]] <- "HARVEST-AREA-15"} # Unknown ages are assumed old
-      if(HFI.year - row[[2]] >= 15) {row[[1]] <- "HARVEST-AREA-15"} # Old harvest areas
+      # Harvest areas with resistance (0-15 years)
+      if(HFI.year - row[[2]] == 15) {row[[1]] <- "HARVEST-AREA-15"} # Old harvest areas
       if(HFI.year - row[[2]] < 15 & HFI.year - row[[2]] >= 4) {row[[1]] <- "HARVEST-AREA-4-15"} # Medium harvest areas
       if(HFI.year - row[[2]] < 4) {row[[1]] <- "HARVEST-AREA-4"} # Young harvest areas
       
-      # Harvest areas with partial recovery (>20 years old)
-      if(row[[1]] == "HARVEST-AREA-15" & (HFI.year - row[[2]]) >= 20 & (HFI.year - row[[2]]) < 40 & row[[3]] %in% c("PineSpruce", "MixDecid")) {row[[1]] <- paste0(row[[3]], 20)} # 20-40
-      if(row[[1]] == "HARVEST-AREA-15" & (HFI.year - row[[2]]) >= 40 & (HFI.year - row[[2]]) < 60 & row[[3]] %in% c("PineSpruce", "MixDecid")) {row[[1]] <- paste0(row[[3]], 40)} # 40-60
-      if(row[[1]] == "HARVEST-AREA-15" & (HFI.year - row[[2]]) >= 60 & (HFI.year - row[[2]]) < 80 & row[[3]] %in% c("PineSpruce", "MixDecid")) {row[[1]] <- paste0(row[[3]], 60)} # 60-80
-      if(row[[1]] == "HARVEST-AREA-15" & (HFI.year - row[[2]]) >= 80 & row[[3]] %in% c("PineSpruce", "MixDecid")) {row[[1]] <- row[[3]]} # Full recovery
+      # If harvest has an unknown age, assume it was harvested in 1940
+      if(row[[2]] == 0) {row[[1]] <- paste0(row[[3]], "-", HFI.year-1940)} # Unknown ages are assumed old
+      
+      # Otherwise, calculate stand age
+      if(row[[1]] == "HARVEST-AREA" & HFI.year - row[[2]] > 15) {row[[1]] <- paste0(row[[3]], "-", HFI.year-row[[2]])}
       
       # Update the value
       cursor$updateRow(row)
@@ -227,9 +224,6 @@ cost_assign <- function(HUC.scale, HUC.id, HFI.year, barrier.lookup, arcpy) {
     arcpy$AddField_management(layer, "LFSource", "DOUBLE")
     arcpy$AddField_management(layer, "GSource", "DOUBLE")
     
-    # Assign costs and sources
-    habitat.avail <- c(0, 0, 0) # Use for tracking if landcover is present in area
-    
     # Use an update cursor to loop through the cells
     landcover.name <- ifelse(layer == "reference_landcover", "Reference", "Current")
     cursor <- arcpy$da$UpdateCursor(in_table = layer, 
@@ -246,33 +240,39 @@ cost_assign <- function(HUC.scale, HUC.id, HFI.year, barrier.lookup, arcpy) {
       row[[6]] <- 1
       row[[7]] <- 1
       
-      if (row[[1]] %in% c("PineSpruce", "PineSpruce20", "PineSpruce40", "PineSpruce60",
-                          "MixDecid", "MixDecid20", "MixDecid40", "MixDecid60")){
+      if (length(grep("PineSpruce", row[[1]], value = FALSE)) == 1){
         
         row[[5]] <- 0
-        habitat.avail[1] <- habitat.avail[1] - 1
+        
+      }
+      
+      if (length(grep("MixDecid", row[[1]], value = FALSE)) == 1){
+        
+        row[[5]] <- 0
         
       }
       
       if (row[[1]] == "LowlandForest"){
         
         row[[6]] <- 0
-        habitat.avail[2] <- habitat.avail[2] - 1
         
       }
       
       if (row[[1]] == "Grassland"){
         
         row[[7]] <- 0
-        habitat.avail[3] <- habitat.avail[3] - 1
         
       }
       
-      # Cost assignment
+      # Get the corrected feature type name
+      feature.name <- row[[1]]
+      if (length(grep("PineSpruce", row[[1]], value = FALSE)) == 1) {feature.name <- "PineSpruce"}
+      if (length(grep("MixDecid", row[[1]], value = FALSE)) == 1) {feature.name <- "MixDecid"}
       
-      row[[2]] <- barrier.lookup$UplandCost[barrier.lookup$FEATURE_TY_ABMI == row[[1]]][1] # Only take the first value
-      row[[3]] <- barrier.lookup$LowlandCost[barrier.lookup$FEATURE_TY_ABMI == row[[1]]][1]
-      row[[4]] <- barrier.lookup$GrasslandCost[barrier.lookup$FEATURE_TY_ABMI == row[[1]]][1]
+      # Cost assignment
+      row[[2]] <- barrier.lookup$UplandCost[barrier.lookup$FEATURE_TY_ABMI == feature.name][1] # Only take the first value
+      row[[3]] <- barrier.lookup$LowlandCost[barrier.lookup$FEATURE_TY_ABMI == feature.name][1]
+      row[[4]] <- barrier.lookup$GrasslandCost[barrier.lookup$FEATURE_TY_ABMI == feature.name][1]
 
       # Update the value
       cursor$updateRow(row)
@@ -289,9 +289,9 @@ cost_assign <- function(HUC.scale, HUC.id, HFI.year, barrier.lookup, arcpy) {
   
 }
 
-###############
-# Cost assign # 
-###############~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#################
+# Cost distance # 
+#################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 cost_distance <- function(status, HUC.scale, HUC.id, HFI.year, move.results, arcpy) {
   
