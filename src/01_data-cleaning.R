@@ -52,8 +52,8 @@ barrier.costs$GrasslandCost <- rescale(x = barrier.costs$AD_HF, to = c(1,10)) # 
 # Update resistance costs for non-like habitat types (Grassland -> Upland Forest -> Lowland Forest)
 # Values were approximated from the Scotland paper
 barrier.costs$UplandCost[match(c("LowlandForest", "Grassland"), barrier.costs$FEATURE_TY_ABMI)] <- c(1.75, 2.5) 
-barrier.costs$LowlandCost[match(c("Grassland", "UplandForest", "PineSpruce", "MixDecid"), barrier.costs$FEATURE_TY_ABMI)] <- c(1.75, 1.75, 1.75, 1.75)
-barrier.costs$GrasslandCost[match(c("LowlandForest", "UplandForest", "PineSpruce", "MixDecid"), barrier.costs$FEATURE_TY_ABMI)] <- c(4.375, 3.2, 3.2, 3.2)
+barrier.costs$LowlandCost[match(c("Grassland", "UplandForest", "Coniferous", "Deciduous"), barrier.costs$FEATURE_TY_ABMI)] <- c(1.75, 1.75, 1.75, 1.75)
+barrier.costs$GrasslandCost[match(c("LowlandForest", "UplandForest", "Coniferous", "Deciduous"), barrier.costs$FEATURE_TY_ABMI)] <- c(4.375, 3.2, 3.2, 3.2)
 
 # Create shapefile for storing movement cost results
 # No movement cost should ever be 0, so this will flag if watersheds are not processed
@@ -120,7 +120,7 @@ for (HUC in watershed.ids) {
 
   # Store results
   write_sf(obj = move.costs,
-           dsn = paste0("data/processed/huc-", huc.unit, "/", HFI, "/movecost/huc-", huc.unit, "-movecost_", HFI, "_2022-09-17.shp"),
+           dsn = paste0("data/processed/huc-", huc.unit, "/", HFI, "/movecost/huc-", huc.unit, "-movecost_", HFI, ".shp"),
            quiet = TRUE)
 
   print(HUC)
