@@ -1,7 +1,7 @@
 #
 # Title: Calculation of landscape connectivity
 # Created: February 9th, 2022
-# Last Updated: August 31st, 2022
+# Last Updated: October 21st, 2022
 # Author: Brandon Allen
 # Objectives: Process the cleaned GIS files for the connectivity index
 # Keywords: Notes, Multi-class Landscape Connectivity, Visualization
@@ -14,6 +14,7 @@
 # 1) This analysis is run for each HUC 8 across the province.
 # 2) Movement cost raster will be calculated at the HUC 8 scale across the province.
 # 3) If we want to filter using quarter sections, we should use the following value 647497
+# 4) Full implementation for harvest recovery curves
 #
 ######################################
 # Multi-class Landscape Connectivity # 
@@ -42,14 +43,16 @@ huc.unit <- 8
 watershed.costs <- read_sf("data/processed/huc-8/2018/movecost/huc-8-movecost_2018_2022-09-17.shp")
 watershed.ids <- unique(watershed.costs$HUC_8)
 
-# Define threshold for the probability distribution.
-# Threshold equals 5% probability of reach the distance threshold (150m; log(0.05) / 150)
-# Threshold equals 5% probability of reach the distance threshold (250m; log(0.05) / 250)
-# Threshold equals 5% probability of reach the distance threshold (300m; log(0.05) / 300)
-# Threshold equals 5% probability of reach the distance threshold (500m; log(0.05) / 500)
+# Define the recovery curve
+load("data/lookup/harvest-recovery.Rdata")
 
-threshold.list <- c(log(0.05) / 150 , log(0.05) / 250, log(0.05) / 300, log(0.05) / 500)
-names(threshold.list) <- c("Dist_150", "Dist_250", "Dist_300", "Dist_500")
+# Define threshold for the probability distribution.
+# Threshold equals 5% probability of reach the distance threshold (250m; log(0.05) / 250)
+dispersal.distance <- 250
+dispersal.threshold <- log(0.05) / dispersal.distance
+
+# Define minimum patch size (m2)
+minimum.patch.size <- 10000
 
 # Initialize arcpy
 py_discover_config() # We need version 3.7
@@ -66,22 +69,23 @@ scratch.space <- "C:/Users/ballen/Desktop/LandscapeConnectivity/data/processed/h
 arcpy$env$scratchWorkspace <- scratch.space
 
 # Create matrix to store the results
-results.matrix <- data.frame(matrix(nrow = length(watershed.ids), ncol = 4, dimnames = list(c(watershed.ids), c("HUC_8", "ECA", "Habitat_Area", "Watershed_Area"))))
-habitat.list <- list(UpCur = results.matrix,
+results.matrix <- data.frame(matrix(nrow = length(watershed.ids), ncol = 4, dimnames = list(c(watershed.ids), c("HUC_8", "Habitat_Area", "ECA",  "Watershed_Area"))))
+results.list <- list(UpCur = results.matrix,
                      LowCur = results.matrix,
                      GrCur = results.matrix,
                      UpRef = results.matrix,
                      LowRef = results.matrix,
                      GrRef = results.matrix)
-results.list <- list(Dist_250 = habitat.list,
-                     Dist_Multi = habitat.list)
 
 # For each HUC in the layer, calculate connectivity
 for (HUC in watershed.ids) {
         
   # Prepare the native layers based on dispersal distance
-  # This is separated into two loops incase a landcover is present in reference, but completely removed under current conditions.
+  # This is separated into two loops in case a landcover is present in reference, but completely removed under current conditions.
   native.classes <- data_prep(status = "Current",
+                              dispersal.distance = dispersal.distance,
+                              minimum.patch.size = minimum.patch.size, 
+                              harvest.recovery = harvest.recovery,
                               HUC.scale = huc.unit,
                               HUC.id = HUC,
                               HFI.year = HFI,
@@ -89,20 +93,23 @@ for (HUC in watershed.ids) {
   
   for (native.type in native.classes) {
     
-    results.list <- landscape_connectivity_2.0(status = "Current",
-                                               native.type = native.type,
-                                               watershed.costs = watershed.costs,
-                                               dist.values = threshold.list,
-                                               HUC.scale = huc.unit,
-                                               HUC.id = HUC,
-                                               HFI.year = HFI,
-                                               results = results.list, 
-                                               arcpy = arcpy)
+    results.list <- landscape_connectivity(status = "Current",
+                                           native.type = native.type,
+                                           watershed.costs = watershed.costs,
+                                           dispersal.threshold = dispersal.threshold,
+                                           HUC.scale = huc.unit,
+                                           HUC.id = HUC,
+                                           HFI.year = HFI,
+                                           results = results.list, 
+                                           arcpy = arcpy)
 
   }
   
   # Prepare the reference layers based on dispersal distance
   native.classes <- data_prep(status = "Reference",
+                              dispersal.distance = dispersal.distance,
+                              minimum.patch.size = minimum.patch.size, 
+                              harvest.recovery = harvest.recovery,
                               HUC.scale = huc.unit,
                               HUC.id = HUC,
                               HFI.year = HFI,
@@ -110,20 +117,24 @@ for (HUC in watershed.ids) {
   
   for (native.type in native.classes) {
     
-    results.list <- landscape_connectivity_2.0(status = "Reference",
-                                               native.type = native.type,
-                                               watershed.costs = watershed.costs,
-                                               dist.values = threshold.list,
-                                               HUC.scale = huc.unit,
-                                               HUC.id = HUC,
-                                               HFI.year = HFI,
-                                               results = results.list, 
-                                               arcpy = arcpy)
+    results.list <- landscape_connectivity(status = "Reference",
+                                           native.type = native.type,
+                                           watershed.costs = watershed.costs,
+                                           dispersal.threshold = dispersal.threshold,
+                                           HUC.scale = huc.unit,
+                                           HUC.id = HUC,
+                                           HFI.year = HFI,
+                                           results = results.list, 
+                                           arcpy = arcpy)
 
   }
   
+  # Add comment information 
+  comment(results.list) <- c("Landscape connectivity analysis based on the 2018 HFI",
+                             "conducted on October 21st, 2022")
+  
   # Save each watershed iteration
-  save(results.list, file = paste0("results/tables/connectivity_HFI", HFI, "_2022-09-27.RData"))
+  save(results.list, file = paste0("results/tables/connectivity_HFI", HFI, ".RData"))
 
   print(HUC)
         
