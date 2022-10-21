@@ -1,7 +1,7 @@
 #
 # Title: Data cleaning functions
 # Created: November 24th, 2020
-# Last Updated: October 20th, 2022
+# Last Updated: October 21st, 2022
 # Author: Brandon Allen
 # Objectives: Functions required for cleaning the layers required for landscape connectivity
 # Keywords: Landscape cleaning, Cost assign, Cost distance
@@ -65,15 +65,15 @@ def Reclass(arg):
     if arg is 'Alkali':
         return 'Grassland'
     if arg is 'AlpineLarch':
-        return 'PineSpruce'
+        return 'Coniferous'
     if arg is 'Bare':
         return 'Other'
     if arg is 'Conif':
-        return 'PineSpruce'
+        return 'Coniferous'
     if arg is 'Decid':
-        return 'MixDecid'
+        return 'Deciduous'
     if arg is 'Fir':
-        return 'PineSpruce'
+        return 'Coniferous'
     if arg is 'GraminoidFen':
         return 'LowlandForest'
     if arg is 'GrassHerb':
@@ -81,9 +81,9 @@ def Reclass(arg):
     if arg is 'Marsh':
         return 'LowlandForest'
     if arg is 'Mixedwood':
-        return 'MixDecid'
+        return 'Deciduous'
     if arg is 'Pine':
-        return 'PineSpruce'
+        return 'Coniferous'
     if arg is 'Shrub':
         return 'Grassland'
     if arg is 'ShrubbyBog':
@@ -95,7 +95,7 @@ def Reclass(arg):
     if arg is 'SnowIce':
         return 'Water'
     if arg is 'Spruce':
-        return 'PineSpruce'
+        return 'Coniferous'
     if arg is 'TreedBogBSpr':
         return 'LowlandForest'
     if arg is 'TreedFenBSpr':
@@ -240,13 +240,13 @@ cost_assign <- function(HUC.scale, HUC.id, HFI.year, barrier.lookup, arcpy) {
       row[[6]] <- 1
       row[[7]] <- 1
       
-      if (length(grep("PineSpruce", row[[1]], value = FALSE)) == 1){
+      if (length(grep("Coniferous", row[[1]], value = FALSE)) == 1){
         
         row[[5]] <- 0
         
       }
       
-      if (length(grep("MixDecid", row[[1]], value = FALSE)) == 1){
+      if (length(grep("Deciduous", row[[1]], value = FALSE)) == 1){
         
         row[[5]] <- 0
         
@@ -266,8 +266,8 @@ cost_assign <- function(HUC.scale, HUC.id, HFI.year, barrier.lookup, arcpy) {
       
       # Get the corrected feature type name
       feature.name <- row[[1]]
-      if (length(grep("PineSpruce", row[[1]], value = FALSE)) == 1) {feature.name <- "PineSpruce"}
-      if (length(grep("MixDecid", row[[1]], value = FALSE)) == 1) {feature.name <- "MixDecid"}
+      if (length(grep("Coniferous", row[[1]], value = FALSE)) == 1) {feature.name <- "Coniferous"}
+      if (length(grep("Deciduous", row[[1]], value = FALSE)) == 1) {feature.name <- "Deciduous"}
       
       # Cost assignment
       row[[2]] <- barrier.lookup$UplandCost[barrier.lookup$FEATURE_TY_ABMI == feature.name][1] # Only take the first value
