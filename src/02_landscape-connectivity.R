@@ -44,14 +44,14 @@ watershed.costs <- read_sf("data/processed/huc-8/2018/movecost/huc-8-movecost_20
 watershed.ids <- unique(watershed.costs$HUC_8)
 
 # Define the recovery curve
-load("data/lookup/harvest-recovery.Rdata")
+load("data/lookup/harvest-recovery-curves.Rdata")
 
 # Define threshold for the probability distribution.
 # Threshold equals 5% probability of reach the distance threshold (250m; log(0.05) / 250)
 dispersal.distance <- 250
 dispersal.threshold <- log(0.05) / dispersal.distance
 
-# Define minimum patch size (m2)
+# Define minimum patch size (m2; 1ha)
 minimum.patch.size <- 10000
 
 # Initialize arcpy
@@ -131,7 +131,7 @@ for (HUC in watershed.ids) {
   
   # Add comment information 
   comment(results.list) <- c("Landscape connectivity analysis based on the 2018 HFI",
-                             "conducted on October 21st, 2022")
+                             "Started on October 28th, 2022")
   
   # Save each watershed iteration
   save(results.list, file = paste0("results/tables/connectivity_HFI", HFI, ".RData"))
