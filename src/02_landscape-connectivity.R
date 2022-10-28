@@ -40,7 +40,7 @@ source("src/landscape-connectivity_functions.R")
 # Define HUC units, and cost matrix
 HFI <- 2018
 huc.unit <- 8
-watershed.costs <- read_sf("data/processed/huc-8/2018/movecost/huc-8-movecost_2018_2022-09-17.shp")
+watershed.costs <- read_sf("data/processed/huc-8/2018/movecost/huc-8-movecost_2018.shp")
 watershed.ids <- unique(watershed.costs$HUC_8)
 
 # Define the recovery curve
