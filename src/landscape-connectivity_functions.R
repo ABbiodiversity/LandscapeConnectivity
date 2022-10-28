@@ -219,11 +219,16 @@ landscape_connectivity<- function(status, native.type, watershed.costs, dispersa
   patch.list <- 1:nrow(native.patches)
   isolated.patched <- patch.list[!(patch.list %in% unique(c(patch.dist$IN_FID, patch.dist$NEAR_FID)))]
   
+  # By saving the column names, we catch instances where there are no patches that are within the specified distance to each other
+  column.names <- colnames(patch.dist)
+  
   for(isolated.id in isolated.patched) {
     
     patch.dist <- rbind(patch.dist, c(isolated.id, isolated.id, 0, 1))
     
   }
+  
+  colnames(patch.dist) <- column.names
 
   # Extract mean cost value
   mean.cost <- as.data.frame(watershed.costs[watershed.costs$HUC_8 == HUC.id, col.id])[1,1]
