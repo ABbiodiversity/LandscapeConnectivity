@@ -26,7 +26,6 @@ gc()
 
 # Load libraries and source functions
 library(foreign)
-library(ggplot2)
 library(igraph)
 library(Matrix)
 library(NCmisc) # Matrix size estimation
