@@ -107,11 +107,13 @@ data_prep <- function(status, dispersal.distance, minimum.patch.size, harvest.re
       rm(row, cursor)
       
       # Dissolve the polygons by cluster using the recalculated areas
-      arcpy$PairwiseDissolve_analysis(in_features =paste0(native.type, "_", status, "_predissolve_groups"), 
+      # This needs to be multi-part otherwise small polygons can sometimes become separate
+      # but maintain the large summed attribute value. 
+      arcpy$PairwiseDissolve_analysis(in_features = paste0(native.type, "_", status, "_predissolve_groups"), 
                                       out_feature_class = paste0(native.type, "_", status, "_dissolve"), 
                                       dissolve_field = paste0("FID_", paste0(native.type, "_", status, "_groups")), 
                                       statistics_fields = list(c("TotalArea", "SUM")), 
-                                      multi_part = "SINGLE_PART")
+                                      multi_part = "MULTI_PART")
       
       # Rename attribute fields so they match the lowland/upland case
       arcpy$AlterField_management(in_table = paste0(native.type, "_", status, "_dissolve"), 
