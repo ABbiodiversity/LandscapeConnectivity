@@ -7,6 +7,10 @@
 # Keywords: Notes, Multi-class Landscape Connectivity, Visualization
 #
 
+# ISSUES TO ADDRESS
+# 1) Identify where rounding error that results in current condition being greater than reference (HUC 18020102)
+# 2) Resolve issue when only a single patch is present (If there is a single habitat patch, there is some marginal connectivity)
+
 #########
 # Notes #
 #########~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

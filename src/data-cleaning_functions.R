@@ -7,6 +7,10 @@
 # Keywords: Landscape cleaning, Cost assign, Cost distance
 #
 
+#
+# NOTE NEED TO CHECK THAT THE DIVIDE3d FUNCTION IS PROPERLY DIVIDING THE COST RASTERS
+#
+
 ######################
 # Landscape cleaning # 
 ######################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

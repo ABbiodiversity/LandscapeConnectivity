@@ -1,7 +1,7 @@
 #
 # Title: Visualization of landscape connectivity
 # Created: October 11th, 2022
-# Last Updated: October 11th, 2022
+# Last Updated: November 3rd, 2022
 # Author: Brandon Allen
 # Objectives: Visualize the landscape connectivity indicator.
 # Keywords: Notes, Visualization
@@ -27,10 +27,10 @@ library(MetBrewer)
 library(sf)
 
 # Load results
-load("results/tables/connectivity_HFI2018_2022-09-27.RData")
+load("results/tables/connectivity_HFI2018.RData")
 
 # Standardize the data
-connectivity <- data.frame(HUC_8 = rownames(results.list$Dist_250$UpCur),
+connectivity <- data.frame(HUC_8 = rownames(results.list$UpCur),
                            UpCur = NA,
                            UpRef = NA,
                            UpArea = NA,
@@ -41,253 +41,145 @@ connectivity <- data.frame(HUC_8 = rownames(results.list$Dist_250$UpCur),
                            GrRef = NA,
                            GrArea = NA)
 
-results.1ha <- list(Dist_250 = connectivity, 
-                    Dist_Multi = connectivity)
+for (cover in names(results.list)) {
+  
+  # Subset data
+  temp.data <- results.list[[cover]]
+  
+  # Fill in NA values
+  temp.data$HUC_8[is.na(temp.data$HUC_8)] <- rownames(temp.data)[is.na(temp.data$HUC_8)]
 
-for (disp in names(results.list)) {
-        
-        disp.temp <- results.list[[disp]]
-        
-        for (cover in names(disp.temp)) { 
-                
-                # Subset data
-                temp.data <- disp.temp[[cover]]
-                
-                # Recalculate ECA
-                temp.data$ECA <- (temp.data$ECA_Watershed / 100) * (temp.data$Watershed_Area)
-                
-                # Fill in NA values
-                temp.data$HUC_8[is.na(temp.data$HUC_8)] <- rownames(temp.data)[is.na(temp.data$HUC_8)]
-                temp.data$ECA[is.na(temp.data$ECA)] <- 0 # Area of 1 prevents NA
-                temp.data$Watershed_Area[is.na(temp.data$Watershed_Area)] <- 0 # Prevents areas from counting
-                temp.data$Habitat_Area[is.na(temp.data$Habitat_Area)] <- 0 # Prevents areas from counting
-                temp.data <- temp.data[connectivity$HUC_8, ]
-                
-                # Fill in values
-                results.1ha[[disp]][[cover]] <- temp.data$ECA
-                
-                # If reference, add the area
-                if(cover %in% c("UpRef", "LowRef", "GrRef")) {
-                        
-                        results.1ha[[disp]][[gsub("Ref", "Area", cover)]] <- temp.data$Watershed_Area * (temp.data$Habitat_Area/100)
-                        
-                }
-                
-                rm(temp.data)
-                
-        }
-        
-        # Calculate scaled version
-        results.1ha[[disp]]$UplndW <- (results.1ha[[disp]]$UpCur / results.1ha[[disp]]$UpRef) * (results.1ha[[disp]]$UpArea / rowSums(results.1ha[[disp]][, c("UpArea",
-                                                                                                                           "LowArea", 
-                                                                                                                           "GrArea")]))
-        results.1ha[[disp]]$LwlndW <- (results.1ha[[disp]]$LowCur / results.1ha[[disp]]$LowRef) * (results.1ha[[disp]]$LowArea / rowSums(results.1ha[[disp]][, c("UpArea",
-                                                                                                                              "LowArea", 
-                                                                                                                              "GrArea")]))
-        results.1ha[[disp]]$GrsslW <- (results.1ha[[disp]]$GrCur / results.1ha[[disp]]$GrRef) * (results.1ha[[disp]]$GrArea / rowSums(results.1ha[[disp]][, c("UpArea",
-                                                                                                                           "LowArea", 
-                                                                                                                           "GrArea")]))
-        results.1ha[[disp]]$Connect <- rowSums(results.1ha[[disp]][, c("UplndW", "LwlndW", "GrsslW")], na.rm = TRUE) * 100
-        
+  # Fill in values
+  connectivity[, cover] <- temp.data$ECA
+  
+  # Pull out the reference area for each habitat
+  if(cover %in% c("UpRef", "LowRef", "GrRef")) {
+    
+    connectivity[, gsub("Ref", "Area", cover)] <- temp.data[, "Habitat_Area"]
+    
+  }
+  
+  rm(temp.data)
+  
 }
 
-save(results.1ha, file = "results/tables/connectivity-250-vs-multi.Rdata")
+# Correct the two watersheds that had single polygons under reference condiion
+native.patches <- read_sf(dsn = "data/processed/huc-8/2018/gis/04020501.gdb",
+                          layer = "UplandForest_Reference_viable")
+native.patches <- sum(round(native.patches$TotalArea / 1000000, 3))
 
-# Calculate % HF
+connectivity[connectivity$HUC_8 == "04020501", c("UpRef", "UpArea")] <- c(native.patches, native.patches)
 
-landcover.classes <- read.csv("data/lookup/landcover-classification_2021-11-17.csv")
-connectivity$HFI <- NA
+native.patches <- read_sf("data/processed/huc-8/2018/gis/04010602.gdb",
+                      layer = "Grassland_Reference_viable")
+native.patches <- sum(round(native.patches$TotalArea / 1000000, 3))
+connectivity[connectivity$HUC_8 == "04010602", c("GrRef", "GrArea")] <- c(native.patches, native.patches)
+rm(cover, native.patches)
 
-for (boundary.id in connectivity$HUC_8) {
-        
-        # Load the patch layer
-        patch.native <- read_sf(dsn = paste0("data/processed/huc-", 8, "/", 2018, "/gis/", boundary.id, ".gdb"), 
-                                layer = "current_landcover")
-        
-        connectivity[connectivity$HUC_8 %in% boundary.id, "HFI"] <- (sum(st_area(patch.native[!(patch.native$Current %in% unique(landcover.classes$Class)), ])) / sum(st_area(patch.native))) * 100
-        print(boundary.id)
-}
 
-#
-# Compare Overall ECA for the two runs
-#
+# NA values become 0.00001 to avoid INF division
+connectivity[is.na(connectivity)] <- 0.00001
 
-eca.compare <- data.frame(disp_multi = results.1ha$Dist_Multi$Connect,
-                          disp_250 = results.1ha$Dist_250$Connect,
-                          HFI = connectivity$HFI)
+# Calculate the combined area-weighted index
+connectivity$UpWeighted <- (connectivity$UpCur / connectivity$UpRef) * (connectivity$UpArea / rowSums(connectivity[, c("UpArea",
+                                                                                                                          "LowArea", 
+                                                                                                                          "GrArea")]))
+connectivity$LowWeighted <- (connectivity$LowCur / connectivity$LowRef) * (connectivity$LowArea / rowSums(connectivity[, c("UpArea",
+                                                                                                                          "LowArea", 
+                                                                                                                          "GrArea")]))
+connectivity$GrWeighted <- (connectivity$GrCur / connectivity$GrRef) * (connectivity$GrArea / rowSums(connectivity[, c("UpArea",
+                                                                                                                          "LowArea", 
+                                                                                                                          "GrArea")]))
+connectivity$Connect <- rowSums(connectivity[, c("UpWeighted", "LowWeighted", "GrWeighted")]) * 100
+connectivity$Connect[connectivity$Connect > 100] <- 100 # Masking values greater than 100 do to rounding error.
 
-save(eca.compare, file = "results/tables/connectivity-250-vs-multi_2018.Rdata")
+# Aspatial visualization
 
-#
-# Figures
-#
-
-rm(list=ls())
-gc()
-
-# load data
-load("results/tables/connectivity-250-vs-multi_2018.Rdata")
-load("results/tables/connectivity-250-vs-multi.Rdata")
-
-# Compare the two dispersal distances
-png(filename = "results/figures/multi-vs-250m-dispersal.png",
-    height = 1600,
-    width = 1600,
+# Save results
+png(paste0("results/figures/connectivity-HFI2018-histogram.png"),
+    width = 1800,
+    height = 1800, 
     res = 300)
 
-ggplot() +
-  geom_point(data = eca.compare, aes(x = disp_multi, y = disp_250)) +
-  geom_abline(slope = 1, intercept = 0) +
-  xlab("Connectivity (Multi)") +
-  ylab("Connectivity (Single)") +
-  theme_light()
+ggplot(data = connectivity, aes(x = Connect, col = "#004f63", fill = "#004f63")) + 
+  geom_histogram(bins = 100, show.legend = FALSE) +
+  scale_color_manual(values = "#004f63") +
+  scale_fill_manual(values = "#004f63") +
+  ggtitle(paste0("Landscape Connectivity (2018)")) + 
+  xlab("Connectivity (%)") +
+  ylab("Frequency") +
+  theme_light() +
+  theme_abmi(font = "Montserrat")
 
 dev.off()
 
-png(filename = "results/figures/multi-footprint-connectivity.png",
-    height = 1600,
-    width = 1600,
-    res = 300)
+# Spatial visualization
 
-ggplot(data = eca.compare, aes(x = HFI, y = disp_multi)) +
-  geom_point() +
-  geom_smooth(method='loess') +
-  ylim(0,100) +
-  ylab("Connectivity (%)") +
-  xlab("Footprint (%)") +
-  theme_light()
-
-dev.off()
-
-png(filename = "results/figures/250-footprint-connectivity.png",
-    height = 1600,
-    width = 1600,
-    res = 300)
-
-ggplot(data = eca.compare, aes(x = HFI, y = disp_250)) +
-  geom_point() +
-  geom_smooth(method='loess') +
-  ylim(0,100) +
-  ylab("Connectivity (%)") +
-  xlab("Footprint (%)") +
-  theme_light()
-
-dev.off()
-
-# Boxplot
-eca.results <- data.frame(Dispersal = c(rep("250", 422), rep("Multi", 422)),
-                          Connectivity = c(eca.compare$disp_250, eca.compare$disp_multi))
-
-png(filename = "results/figures/multi-vs-250m-dispersal-boxplot.png",
-    height = 1200,
-    width = 1600,
-    res = 300)
-ggplot(data = eca.results) +
-        geom_boxplot(aes(x = Dispersal, y = Connectivity)) +
-        theme_light()
-dev.off()
-
-#
-# Habitat comparison
-#
-
-# Grassland
-habitat.comp <- data.frame(Dispersal = c(rep("250", 422), 
-                                         rep("Multi", 422)),
-                           Connectivity = c(((results.1ha$Dist_250$GrCur / results.1ha$Dist_250$GrRef) * 100), 
-                                     ((results.1ha$Dist_Multi$GrCur / results.1ha$Dist_Multi$GrRef) * 100)),
-                           Area = rep(c(results.1ha$Dist_250$GrArea / rowSums(results.1ha$Dist_250[, c("UpArea", "LowArea", "GrArea")], na.rm = TRUE)), 2))
-
-habitat.comp <- habitat.comp[habitat.comp$Area > 0.01, ]
-
-# Boxplots
-png(filename = "results/figures/grassland-dispersal-comparison.png",
-    height = 1200,
-    width = 1600,
-    res = 300)
-ggplot(data = habitat.comp) +
-        geom_boxplot(aes(x = Dispersal, y = Connectivity)) +
-        ggtitle("Grassland habitats") +
-        theme_light()
-dev.off()
-
-# Upland
-habitat.comp <- data.frame(Dispersal = c(rep("250", 422), 
-                                         rep("Multi", 422)),
-                           Connectivity = c(((results.1ha$Dist_250$UpCur / results.1ha$Dist_250$UpRef) * 100), 
-                                            ((results.1ha$Dist_Multi$UpCur / results.1ha$Dist_Multi$UpRef) * 100)),
-                           Area = rep(c(results.1ha$Dist_250$UpArea / rowSums(results.1ha$Dist_250[, c("UpArea", "LowArea", "GrArea")], na.rm = TRUE)), 2))
-
-habitat.comp <- habitat.comp[habitat.comp$Area > 0.01, ]
-
-# Boxplots
-png(filename = "results/figures/upland-dispersal-comparison.png",
-    height = 1200,
-    width = 1600,
-    res = 300)
-ggplot(data = habitat.comp) +
-  geom_boxplot(aes(x = Dispersal, y = Connectivity)) +
-  ggtitle("Upland habitats") +
-  theme_light()
-dev.off()
-
-
-# Lowland
-habitat.comp <- data.frame(Dispersal = c(rep("250", 422), 
-                                         rep("Multi", 422)),
-                           Connectivity = c(((results.1ha$Dist_250$LowCur / results.1ha$Dist_250$LowRef) * 100), 
-                                            ((results.1ha$Dist_Multi$LowCur / results.1ha$Dist_Multi$LowRef) * 100)),
-                           Area = rep(c(results.1ha$Dist_250$LowArea / rowSums(results.1ha$Dist_250[, c("UpArea", "LowArea", "GrArea")], na.rm = TRUE)), 2))
-
-habitat.comp <- habitat.comp[habitat.comp$Area > 0.01, ]
-
-# Boxplots
-png(filename = "results/figures/lowland-dispersal-comparison.png",
-    height = 1200,
-    width = 1600,
-    res = 300)
-ggplot(data = habitat.comp) +
-  geom_boxplot(aes(x = Dispersal, y = Connectivity)) +
-  ggtitle("Lowland habitats") +
-  theme_light()
-dev.off()
-
-#
-# Spatial Map
-#
-
-# Load results
 shape.in <- read_sf("data/base/gis/boundaries/HUC_8_EPSG3400.shp")
-eca.compare <- results.1ha$Dist_250[, c("HUC_8", "Connect")]
+shape.in <- merge(shape.in, connectivity, by = "HUC_8")
 
-# Fix the rounding error
-eca.compare$Connect <- round(eca.compare$Connect)
-
-shape.in <- merge(shape.in, eca.compare, by = "HUC_8")
-
-# # Save results
-
-png(file = paste0("results/figures/connectivity-1ha-250m-2018HFI.png"),
+png(paste0("results/figures/connectivity-HFI2018.png"),
     width = 1800,
     height = 2400, 
     res = 300)
-landscape.map <- ggplot() + 
-        geom_sf(data = shape.in, aes(fill = Connect, colour = Connect)) +
-        scale_fill_gradientn(name = "Connectivity", colours = c("#a50026", "#d73027", "#f46d43", "#fdae61", "#fee090", "#ffffbf",
-                                                                "#e0f3f8","#abd9e9", "#74add1", "#4575b4", "#313695")) +
-        scale_colour_gradientn(name = "Connectivity", colours = c("#a50026", "#d73027", "#f46d43", "#fdae61", "#fee090", "#ffffbf",
-                                                                  "#e0f3f8","#abd9e9", "#74add1", "#4575b4", "#313695")) +
-        theme(axis.text.y  = element_blank(),
-              axis.text.x  = element_blank(),
-              axis.title.y = element_text(size=10),
-              axis.title.x = element_text(size=10),
-              axis.ticks.x = element_blank(),
-              axis.ticks.y = element_blank(),
-              panel.background = element_blank(),
-              panel.grid.major = element_blank(), 
-              panel.grid.minor = element_blank(),
-              axis.line = element_line(colour = "black"),
-              panel.border = element_rect(colour = "black", fill=NA, size=1))
-print(landscape.map)
+
+ggplot() + 
+  geom_sf(data = shape.in, aes(fill = Connect), show.legend = TRUE) +
+  scale_fill_gradientn(name = paste0("Connectivity (%)"), colors = met.brewer(name = "Hiroshige", n = 100, type = "continuous"), guide = "colourbar") +
+  ggtitle("Landscape Connectivity (2018)") + 
+  theme_light() +
+  theme(axis.title = element_text(size=12),
+        axis.text.x = element_text(size=12),
+        axis.text.y = element_text(size=12),
+        title = element_text(size=12), 
+        legend.title = element_text(size=12),
+        legend.text = element_text(size=12),
+        legend.key.size = unit(0.5, "cm"),
+        axis.line = element_line(colour = "black"),
+        panel.border = element_rect(colour = "black", fill=NA, size=1),
+        legend.position = c(0.19, 0.15)) 
 
 dev.off()
+
+#
+# Resistance
+#
+
+resist.in <- read_sf("data/processed/huc-8/2018/movecost/huc-8-movecost_2018.shp")
+
+
+# Need to create a resistance map for each habitat type and reference condition
+habitat <- c("UpCur", "UpRef", "LowCur", "LowRef", "GrCur", "GrRef")
+names(habitat) <- c("Upland Forest Current", "Upland Forest Reference", 
+                    "Lowland Forest Current", "Lowland Forest Reference",
+                    "Grassland Current", "Grassland Reference")
+
+for (i in names(habitat)) {
+  
+  name.id <- as.character(habitat[i])
+  
+  png(paste0("results/figures/", i, " resistance.png"),
+      width = 1800,
+      height = 2400, 
+      res = 300)
+    
+  print(ggplot() + 
+    geom_sf(data = resist.in, aes_string(fill = name.id), show.legend = TRUE) +
+    scale_fill_gradientn(name = paste0("Resistance"), colors = rev(met.brewer(name = "Hiroshige", n = 100, type = "continuous")), guide = "colourbar") +
+    ggtitle(i) + 
+    theme_light() +
+    theme(axis.title = element_text(size=12),
+          axis.text.x = element_text(size=12),
+          axis.text.y = element_text(size=12),
+          title = element_text(size=12), 
+          legend.title = element_text(size=12),
+          legend.text = element_text(size=12),
+          legend.key.size = unit(0.5, "cm"),
+          axis.line = element_line(colour = "black"),
+          panel.border = element_rect(colour = "black", fill=NA, size=1),
+          legend.position = c(0.19, 0.15)))
+  
+  dev.off()
+  
+}
+
