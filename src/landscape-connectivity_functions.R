@@ -7,7 +7,7 @@
 # Keywords: Data preparation, Landscape Connectivity, Network Visualization
 #
 
-# NOTE: NEED TO MAKE SURE THAT HARVEST AREAS OLDER THAN 100 ARE CLASSIFIED AS NATIVE
+# NOTE: NEED TO MAKE SURE THAT HARVEST AREAS OLDER THAN 80 ARE CLASSIFIED AS NATIVE
 
 ####################
 # Data preparation #
