@@ -1,12 +1,14 @@
 #
 # Title: Data cleaning for the landscape connectivity indicator
 # Created: February 4th, 2022
-# Last Updated: October 20th, 2022
+# Last Updated: September 5th, 2022
 # Author: Brandon Allen
 # Objectives: Clean GIS data required for creating the landscape connectivity indicator. 
 # Keywords: Notes, Initialization
 #
 
+# ALSO FIGURE OUT HOW TO ADD THE VEG LOOKUP TABLE INTO THE REPLACE FUNCTION SO YOU DON'T HAVE TO HARD CODE IT
+# RGDAL AND RGEOS ARE BECOMING LEGACY PACKAGES, NEED TO ADDRESS CHANGES TO SP PACKAGE
 #########
 # Notes #
 #########~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -16,7 +18,7 @@
 # 3) Results are all stored in geodatabases for improved processing time and storage space
 #
 ##################
-# Initialization # 
+# Initialization #  Need to confirm that the new distance_cost results are stored properly. Had to updated due to parallel processing.
 ##################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Clear memory, source scripts
@@ -24,12 +26,13 @@ rm(list=ls())
 gc()
 
 # Load libraries
+library(parallel)
 library(readxl)
 library(reticulate)
 library(scales)
 library(sf)
 
-source("src/data-cleaning_functions.R")
+source("src/data-cleaning-v7_functions.R")
 
 # Define HUC units and HFI inventories
 HFI <- 2018
@@ -70,11 +73,11 @@ move.costs$GrRef <- 0
 #################### 
 
 # Initialize arcpy
-py_discover_config() # We need version 3.7
-py_config() # Double check it is version 3.7
+py_discover_config() # We need version 3.9
+py_config() # Double check it is version 3.9
 
 # Set python 
-use_python(python = "C:/Users/ballen/miniconda3/envs/r-reticulate/python.exe")
+use_python(python = "C:/Users/ballen/AppData/Local/r-miniconda/envs/r-reticulate/python.exe")
 
 # Load arcpy
 arcpy <- import('arcpy') 
@@ -83,14 +86,15 @@ arcpy <- import('arcpy')
 arcpy$env$parallelProcessingFactor <- "100%"
 
 ########################
-# Landscape Extraction #
-########################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Landscape Extraction # 
+########################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 for (HUC in watershed.ids) { 
   
   # Clean the landscape
-  landscape_cleaning(landcover.layer = "D:/backfill//veg61hf2018_bdqt.gdb/veg61hf2018_BDQT_mtos",
+  landscape_cleaning(landcover.layer = "D:/backfill/Veg7HFI2018/gdb_SC_veg7hf_2018_rev01.gdb/vegv7hf2018",
                      boundary.layer = "data/base/gis/boundaries/HUC_8_EPSG3400.shp",
+                     wildlife.layer = "data/base/wildlife-crossings/wildlife_crossings_100m.shp",
                      HUC.scale = huc.unit,
                      HUC.id = HUC,
                      arcpy = arcpy,
@@ -108,16 +112,18 @@ for (HUC in watershed.ids) {
                               HUC.scale = huc.unit,
                               HUC.id = HUC,
                               arcpy = arcpy,
-                              HFI.year = HFI,
-                              move.results = move.costs)
+                              HFI.year = HFI)
+  
+  move.costs[move.costs$HUC_8 == HUC, c("UpRef", "LowRef", "GrRef")] <- move.costs
   
   move.costs <- cost_distance(status = "current",
                               HUC.scale = huc.unit,
                               HUC.id = HUC,
                               arcpy = arcpy,
-                              HFI.year = HFI,
-                              move.results = move.costs)
-
+                              HFI.year = HFI)
+  
+  move.costs[move.costs$HUC_8 == HUC, c("UpCur", "LowCur", "GrCur")] <- move.costs
+  
   # Store results
   write_sf(obj = move.costs,
            dsn = paste0("data/processed/huc-", huc.unit, "/", HFI, "/movecost/huc-", huc.unit, "-movecost_", HFI, ".shp"),
