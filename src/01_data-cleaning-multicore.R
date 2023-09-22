@@ -68,7 +68,7 @@ move.costs <- read_sf("data/base/gis/boundaries/HUC_8_EPSG3400.shp")
 
 # Define the cores for parallel processing
 start.time <- Sys.time()
-n.clusters <- 6
+n.clusters <- 12
 core.input <- makeCluster(n.clusters)
 clusterExport(core.input, c("huc.unit", "HFI", "barrier.costs", "landscape_cleaning", "cost_assign", "cost_distance"))
 clusterEvalQ(core.input, {
@@ -99,7 +99,7 @@ clusterEvalQ(core.input, {
 
 # Clean the landscapes
 parLapply(core.input, 
-          as.list(watershed.ids[1:6]), 
+          as.list(watershed.ids), 
           fun = function(HUC) tryCatch(landscape_cleaning(landcover.layer = "D:/backfill/Version7.0/gdb_veghf_reference_condition_2018.gdb/veghf_2018",
                                                         boundary.layer = "data/base/gis/boundaries/HUC_8_EPSG3400.shp",
                                                         wildlife.layer = "data/base/wildlife-crossings/wildlife_crossings_100m.shp",
@@ -113,7 +113,7 @@ landscape.clean.time <- Sys.time() - start.time
 
 # Assign costs
 parLapply(core.input, 
-          as.list(watershed.ids[1:6]), 
+          as.list(watershed.ids), 
           fun = function(HUC) tryCatch(cost_assign(barrier.lookup = barrier.costs,
                                                    HUC.scale = huc.unit,
                                                    HUC.id = HUC,
@@ -124,7 +124,7 @@ cost.assign.time <- Sys.time() - start.time
 
 # Calculate costs
 reference.cost <- parLapply(core.input, 
-                            as.list(watershed.ids[1:6]), 
+                            as.list(watershed.ids), 
                             fun = function(HUC) tryCatch(cost_distance(status = "reference",
                                                                        HUC.scale = huc.unit,
                                                                        HUC.id = HUC,
@@ -135,7 +135,7 @@ reference.cost <- parLapply(core.input,
 cost.distance.time <- Sys.time() - start.time
 
 current.cost <- parLapply(core.input, 
-                          as.list(watershed.ids[1:6]), 
+                          as.list(watershed.ids), 
                           fun = function(HUC) tryCatch(cost_distance(status = "current",
                                                                      HUC.scale = huc.unit,
                                                                      HUC.id = HUC,
