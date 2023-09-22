@@ -1,7 +1,7 @@
 #
 # Title: Data cleaning functions
 # Created: November 24th, 2020
-# Last Updated: September 21st, 2023
+# Last Updated: September 22nd, 2023
 # Author: Brandon Allen
 # Objectives: Functions required for cleaning the layers required for landscape connectivity
 # Keywords: Landscape cleaning, Cost assign, Cost distance
@@ -49,12 +49,19 @@ landscape_cleaning <- function(landcover.layer, boundary.layer, wildlife.layer, 
                               clip_features = "boundary", 
                               out_feature_class = "landcover_nocrossing")
   
+  ################################
+  # Copy Wildlife crossing layer #
+  ################################
+  
+  arcpy$Copy_management(in_data = wildlife.layer, 
+                        out_data = "wildlife_crossing")
+  
   #################################
   # Union with Wildlife Corridors # 
   #################################
   
-  arcpy$Union_analysis(in_features = paste0("landcover_nocrossing; ", wildlife.layer), 
-                       out_feature_class = "landcover_crossings")
+  arcpy$Union_analysis(in_features = "landcover_nocrossing; wildlife_crossing", 
+                       out_feature_class = "landcover_crossing")
   
   #######################################################
   # Clip to the boundary to remove irrelevant crossings # 
@@ -189,26 +196,34 @@ def Reclass(current, reference, year, hfiyear):
                                   expression_type = "PYTHON", 
                                   code_block = replace_function)
   
+  # If wildlife crossings are present, correct the landcover type
+  field.list <- arcpy$ListFields(dataset = "landcover", 
+                                 field_type = "ALL")
+  field.list <- unlist(lapply(field.list, function(x) x$name))
   
-  # Define the python function for correcting wildlife corridors. Need to correct both current and reference conditions
-  replace_function <- "
+  if("Purpose" %in% field.list) {
+    
+    # Define the python function for correcting wildlife corridors. Need to correct both current and reference conditions
+    replace_function <- "
 def Reclass(habitat, purpose):
     if purpose == 'wildlife':
         return 'Coniferous'
     if purpose != 'wildlife':
         return habitat"
-  
-  arcpy$CalculateField_management(in_table = "landcover",
-                                  field = "Current",
-                                  expression = "Reclass(!Current!, !Purpose!)",
-                                  expression_type = "PYTHON", 
-                                  code_block = replace_function)
-  
-  arcpy$CalculateField_management(in_table = "landcover",
-                                  field = "Reference",
-                                  expression = "Reclass(!Reference!, !Purpose!)",
-                                  expression_type = "PYTHON", 
-                                  code_block = replace_function)
+
+    arcpy$CalculateField_management(in_table = "landcover",
+                                    field = "Current",
+                                    expression = "Reclass(!Current!, !Purpose!)",
+                                    expression_type = "PYTHON", 
+                                    code_block = replace_function)
+    
+    arcpy$CalculateField_management(in_table = "landcover",
+                                    field = "Reference",
+                                    expression = "Reclass(!Reference!, !Purpose!)",
+                                    expression_type = "PYTHON", 
+                                    code_block = replace_function)
+    
+  }
   
   # Dissolve landcover into simplified current and reference landcovers.
   arcpy$PairwiseDissolve_analysis(in_features = "landcover", 
@@ -222,9 +237,11 @@ def Reclass(habitat, purpose):
                                   multi_part = "SINGLE_PART")
   
   # Remove the original landcover layer as it is no longer needed
+  arcpy$Delete_management("wildlife_crossing")
   arcpy$Delete_management("landcover_nocrossing")
-  arcpy$Delete_management("landcover_nocrossing")
+  arcpy$Delete_management("landcover_crossing")
   arcpy$Delete_management("landcover")
+  
   
 }
 
