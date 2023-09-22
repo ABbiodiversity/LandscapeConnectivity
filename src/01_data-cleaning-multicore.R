@@ -1,11 +1,12 @@
 #
 # Title: Data cleaning for the landscape connectivity indicator (Multicore)
 # Created: February 4th, 2022
-# Last Updated: September 5th, 2022
+# Last Updated: September 21st, 2022
 # Author: Brandon Allen
 # Objectives: Clean GIS data required for creating the landscape connectivity indicator. 
 # Keywords: Notes, Initialization
 #
+
 #########
 # Notes #
 #########~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -67,7 +68,7 @@ move.costs <- read_sf("data/base/gis/boundaries/HUC_8_EPSG3400.shp")
 
 # Define the cores for parallel processing
 start.time <- Sys.time()
-n.clusters <- 10
+n.clusters <- 6
 core.input <- makeCluster(n.clusters)
 clusterExport(core.input, c("huc.unit", "HFI", "barrier.costs", "landscape_cleaning", "cost_assign", "cost_distance"))
 clusterEvalQ(core.input, {
@@ -98,8 +99,8 @@ clusterEvalQ(core.input, {
 
 # Clean the landscapes
 parLapply(core.input, 
-          as.list(watershed.ids[1:20]), 
-          fun = function(HUC) tryCatch(landscape_cleaning(landcover.layer = "D:/backfill/Veg7HFI2018/gdb_SC_veg7hf_2018_rev01.gdb/vegv7hf2018",
+          as.list(watershed.ids[1:6]), 
+          fun = function(HUC) tryCatch(landscape_cleaning(landcover.layer = "D:/backfill/Version7.0/gdb_veghf_reference_condition_2018.gdb/veghf_2018",
                                                         boundary.layer = "data/base/gis/boundaries/HUC_8_EPSG3400.shp",
                                                         wildlife.layer = "data/base/wildlife-crossings/wildlife_crossings_100m.shp",
                                                         HUC.scale = huc.unit,
@@ -108,22 +109,22 @@ parLapply(core.input,
                                                         HFI.year = HFI), error = function(e) e)
 )
 
-Sys.time() - start.time
+landscape.clean.time <- Sys.time() - start.time
 
 # Assign costs
 parLapply(core.input, 
-          as.list(watershed.ids[1:20]), 
+          as.list(watershed.ids[1:6]), 
           fun = function(HUC) tryCatch(cost_assign(barrier.lookup = barrier.costs,
                                                    HUC.scale = huc.unit,
                                                    HUC.id = HUC,
                                                    arcpy = arcpy,
                                                    HFI.year = HFI), error = function(e) e)
 )
-Sys.time() - start.time
+cost.assign.time <- Sys.time() - start.time
 
 # Calculate costs
 reference.cost <- parLapply(core.input, 
-                            as.list(watershed.ids[1:2]), 
+                            as.list(watershed.ids[1:6]), 
                             fun = function(HUC) tryCatch(cost_distance(status = "reference",
                                                                        HUC.scale = huc.unit,
                                                                        HUC.id = HUC,
@@ -131,10 +132,10 @@ reference.cost <- parLapply(core.input,
                                                                        HFI.year = HFI), error = function(e) e)
 )
 
-Sys.time() - start.time
+cost.distance.time <- Sys.time() - start.time
 
 current.cost <- parLapply(core.input, 
-                          as.list(watershed.ids[1:20]), 
+                          as.list(watershed.ids[1:6]), 
                           fun = function(HUC) tryCatch(cost_distance(status = "current",
                                                                      HUC.scale = huc.unit,
                                                                      HUC.id = HUC,
@@ -142,17 +143,21 @@ current.cost <- parLapply(core.input,
                                                                      HFI.year = HFI), error = function(e) e)
 )
 
-Sys.time() - start.time
+cost.distance.time.2 <- Sys.time() - start.time
 
 stopCluster(core.input)
 
 # Format the reference and current cost to align with the shapefile
-current.cost <- matrix(unlist(current.cost), ncol = 3, nrow = 8, byrow = TRUE)
-colnames(current.cost) <- c("UpCur", "LowCur", "GrCur")
+huc.names <- unlist(lapply(current.cost, function(x) rownames(x)))
+current.cost <- matrix(unlist(current.cost), ncol = 3, nrow = nrow(move.costs), byrow = TRUE,
+                       dimnames = list(huc.names, c("UpCur", "LowCur", "GrCur")))
+current.cost <- current.cost[move.costs$HUC_8, ]
 move.costs <- cbind(move.costs, current.cost)
 
-reference.cost <- matrix(unlist(reference.cost), ncol = 3, nrow = 8, byrow = TRUE)
-colnames(reference.cost) <- c("UpRef", "LowRef", "GrRef")
+huc.names <- unlist(lapply(reference.cost, function(x) rownames(x)))
+reference.cost <- matrix(unlist(reference.cost), ncol = 3, nrow = nrow(move.costs), byrow = TRUE,
+                         dimnames = list(huc.names, c("UpRef", "LowRef", "GrRef")))
+reference.cost <- reference.cost[move.costs$HUC_8, ]
 move.costs <- cbind(move.costs, reference.cost)
 
 # Store results
