@@ -34,6 +34,9 @@ library(sf)
 
 source("src/data-cleaning-v7_functions.R")
 
+# Source the chunk id
+load("data/base/tracking/chunk-id.Rdata")
+
 # Define HUC units and HFI inventories
 HFI <- 2018
 huc.unit <- 8
@@ -67,7 +70,6 @@ move.costs <- read_sf("data/base/gis/boundaries/HUC_8_EPSG3400.shp")
 ##################################
 
 # Define the cores for parallel processing
-start.time <- Sys.time()
 n.clusters <- 12
 core.input <- makeCluster(n.clusters)
 clusterExport(core.input, c("huc.unit", "HFI", "barrier.costs", "landscape_cleaning", "cost_assign", "cost_distance"))
@@ -97,9 +99,25 @@ clusterEvalQ(core.input, {
 # Landscape Extraction #
 ########################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+# Arcpro appears to stall after calling so many functions. Subset into smaller chunks to prevent this.
+chunks <- data.frame(Min = seq(1,422, by = 24),
+                     Max = c(seq(24,422, by = 24), 422))
+
+# If the chunk id is greater than the expected maximum number, reset to 1 (new loop)
+if(chunk.id > nrow(chunks)) {
+  
+  chunk.id <- 1
+  save(chunk.id, file = "data/base/tracking/chunk-id.Rdata")
+  
+}
+
+# Define chunk min and max
+chunk.min <- chunks[chunk.id, "Min"]
+chunk.max <- chunks[chunk.id, "Max"]
+
 # Clean the landscapes
 parLapply(core.input, 
-          as.list(watershed.ids), 
+          as.list(watershed.ids[chunk.min:chunk.max]), 
           fun = function(HUC) tryCatch(landscape_cleaning(landcover.layer = "D:/backfill/Version7.0/gdb_veghf_reference_condition_2018.gdb/veghf_2018",
                                                         boundary.layer = "data/base/gis/boundaries/HUC_8_EPSG3400.shp",
                                                         wildlife.layer = "data/base/wildlife-crossings/wildlife_crossings_100m.shp",
@@ -109,22 +127,19 @@ parLapply(core.input,
                                                         HFI.year = HFI), error = function(e) e)
 )
 
-landscape.clean.time <- Sys.time() - start.time
-
 # Assign costs
 parLapply(core.input, 
-          as.list(watershed.ids), 
+          as.list(watershed.ids[chunk.min:chunk.max]), 
           fun = function(HUC) tryCatch(cost_assign(barrier.lookup = barrier.costs,
                                                    HUC.scale = huc.unit,
                                                    HUC.id = HUC,
                                                    arcpy = arcpy,
                                                    HFI.year = HFI), error = function(e) e)
 )
-cost.assign.time <- Sys.time() - start.time
 
 # Calculate costs
 reference.cost <- parLapply(core.input, 
-                            as.list(watershed.ids), 
+                            as.list(watershed.ids[chunk.min:chunk.max]), 
                             fun = function(HUC) tryCatch(cost_distance(status = "reference",
                                                                        HUC.scale = huc.unit,
                                                                        HUC.id = HUC,
@@ -132,10 +147,8 @@ reference.cost <- parLapply(core.input,
                                                                        HFI.year = HFI), error = function(e) e)
 )
 
-cost.distance.time <- Sys.time() - start.time
-
 current.cost <- parLapply(core.input, 
-                          as.list(watershed.ids), 
+                          as.list(watershed.ids[chunk.min:chunk.max]), 
                           fun = function(HUC) tryCatch(cost_distance(status = "current",
                                                                      HUC.scale = huc.unit,
                                                                      HUC.id = HUC,
@@ -143,28 +156,51 @@ current.cost <- parLapply(core.input,
                                                                      HFI.year = HFI), error = function(e) e)
 )
 
-cost.distance.time.2 <- Sys.time() - start.time
-
 stopCluster(core.input)
 
-# Format the reference and current cost to align with the shapefile
-huc.names <- unlist(lapply(current.cost, function(x) rownames(x)))
-current.cost <- matrix(unlist(current.cost), ncol = 3, nrow = nrow(move.costs), byrow = TRUE,
-                       dimnames = list(huc.names, c("UpCur", "LowCur", "GrCur")))
-current.cost <- current.cost[move.costs$HUC_8, ]
-move.costs <- cbind(move.costs, current.cost)
 
-huc.names <- unlist(lapply(reference.cost, function(x) rownames(x)))
-reference.cost <- matrix(unlist(reference.cost), ncol = 3, nrow = nrow(move.costs), byrow = TRUE,
-                         dimnames = list(huc.names, c("UpRef", "LowRef", "GrRef")))
-reference.cost <- reference.cost[move.costs$HUC_8, ]
-move.costs <- cbind(move.costs, reference.cost)
+# Initialize the restart if there are watersheds left to run
+if (chunks[chunk.id, "Max"] != max(chunks$Max)) {
+  
+  # Update the iteration call
+  chunk.id <- chunk.id + 1
+  save(chunk.id, file = "data/base/tracking/chunk-id.Rdata")
+  
+  # Clear memory
+  rm(list=ls())
+  gc()
+  
+  # Restart
+  restartSession(command = 'source("src/01_data-cleaning-multicore.R")')
+  
+} else {
+  
+  # Update the iteration call (pushes chunk id to be greater than expected max)
+  chunk.id <- chunk.id + 1
+  save(chunk.id, file = "data/base/tracking/chunk-id.Rdata")
+  
+  # Clear memory
+  rm(list=ls())
+  gc()
+  
+}
 
-# Store results
-write_sf(obj = move.costs,
-         dsn = paste0("data/processed/huc-", huc.unit, "/", HFI, "/movecost/huc-", huc.unit, "-movecost_", HFI, ".shp"),
-         quiet = TRUE)
 
-# Clear memory
-rm(list=ls())
-gc()
+# # Will need to move to a separate script if this sourcing version works
+# # Format the reference and current cost to align with the shapefile
+# huc.names <- unlist(lapply(current.cost, function(x) rownames(x)))
+# current.cost <- matrix(unlist(current.cost), ncol = 3, nrow = nrow(move.costs), byrow = TRUE,
+#                        dimnames = list(huc.names, c("UpCur", "LowCur", "GrCur")))
+# current.cost <- current.cost[move.costs$HUC_8, ]
+# move.costs <- cbind(move.costs, current.cost)
+# 
+# huc.names <- unlist(lapply(reference.cost, function(x) rownames(x)))
+# reference.cost <- matrix(unlist(reference.cost), ncol = 3, nrow = nrow(move.costs), byrow = TRUE,
+#                          dimnames = list(huc.names, c("UpRef", "LowRef", "GrRef")))
+# reference.cost <- reference.cost[move.costs$HUC_8, ]
+# move.costs <- cbind(move.costs, reference.cost)
+# 
+# # Store results
+# write_sf(obj = move.costs,
+#          dsn = paste0("data/processed/huc-", huc.unit, "/", HFI, "/movecost/huc-", huc.unit, "-movecost_", HFI, ".shp"),
+#          quiet = TRUE)
