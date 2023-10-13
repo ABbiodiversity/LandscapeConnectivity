@@ -1,7 +1,7 @@
 #
 # Title: Data cleaning for the landscape connectivity indicator (Multicore)
 # Created: February 4th, 2022
-# Last Updated: September 21st, 2022
+# Last Updated: September 27th, 2022
 # Author: Brandon Allen
 # Objectives: Clean GIS data required for creating the landscape connectivity indicator. 
 # Keywords: Notes, Initialization
@@ -14,7 +14,7 @@
 # 1) This analysis is run for each HUC 8 across the province.
 # 2) Movement cost raster will be calculated at the HUC 8 scale across the province.
 # 3) Results are all stored in geodatabases for improved processing time and storage space
-# 4) For wildlife crossings, we select infrastructure designed for wildlife, buffer to 75m, then assign an upland class (Pine).
+# 4) For wildlife crossings, we select infrastructure designed for wildlife, buffer to 100m, then assign an upland class (Pine).
 # This is done because wildlife corridors are generally meant to improve upland connectivity. Also, currently they are restricted to the national parks.
 #
 ##################
@@ -34,14 +34,11 @@ library(sf)
 
 source("src/data-cleaning-v7_functions.R")
 
-# Source the chunk id
-load("data/base/tracking/chunk-id.Rdata")
-
 # Define HUC units and HFI inventories
 HFI <- 2018
 huc.unit <- 8
 watershed.ids <- read_sf("data/base/gis/boundaries/HUC_8_EPSG3400.shp")
-watershed.ids <- watershed.ids$HUC_8
+watershed.ids <- watershed.ids$HUC_8[1:14]
 
 # Landcover lookup
 landcover.classes <- read.csv("data/lookup/landcover-classification.csv")
@@ -61,16 +58,12 @@ barrier.costs$UplandCost[match(c("LowlandForest", "Grassland"), barrier.costs$FE
 barrier.costs$LowlandCost[match(c("Grassland", "UplandForest", "Coniferous", "Deciduous"), barrier.costs$FEATURE_TY_ABMI)] <- c(1.75, 1.75, 1.75, 1.75)
 barrier.costs$GrasslandCost[match(c("LowlandForest", "UplandForest", "Coniferous", "Deciduous"), barrier.costs$FEATURE_TY_ABMI)] <- c(4.375, 3.2, 3.2, 3.2)
 
-# Load shapefile for storing movement cost results
-# No movement cost should ever be 0, so this will flag if watersheds are not processed
-move.costs <- read_sf("data/base/gis/boundaries/HUC_8_EPSG3400.shp")
-
 ##################################
 # Initialize parallel processing #
 ##################################
 
 # Define the cores for parallel processing
-n.clusters <- 12
+n.clusters <- 14
 core.input <- makeCluster(n.clusters)
 clusterExport(core.input, c("huc.unit", "HFI", "barrier.costs", "landscape_cleaning", "cost_assign", "cost_distance"))
 clusterEvalQ(core.input, {
@@ -91,7 +84,9 @@ clusterEvalQ(core.input, {
   arcpy <- import('arcpy') 
   
   # Define parallel processing factor
-  arcpy$env$parallelProcessingFactor <- "100%"
+  # This needs to be set to 0 when performing parallel processing on workers.
+  # If not set to 0, processes get jumbled and may fail.
+  arcpy$env$parallelProcessingFactor <- "0%"
   
 })
 
@@ -99,25 +94,11 @@ clusterEvalQ(core.input, {
 # Landscape Extraction #
 ########################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# Arcpro appears to stall after calling so many functions. Subset into smaller chunks to prevent this.
-chunks <- data.frame(Min = seq(1,422, by = 24),
-                     Max = c(seq(24,422, by = 24), 422))
-
-# If the chunk id is greater than the expected maximum number, reset to 1 (new loop)
-if(chunk.id > nrow(chunks)) {
-  
-  chunk.id <- 1
-  save(chunk.id, file = "data/base/tracking/chunk-id.Rdata")
-  
-}
-
-# Define chunk min and max
-chunk.min <- chunks[chunk.id, "Min"]
-chunk.max <- chunks[chunk.id, "Max"]
+start.time <- Sys.time()
 
 # Clean the landscapes
 parLapply(core.input, 
-          as.list(watershed.ids[chunk.min:chunk.max]), 
+          as.list(watershed.ids), 
           fun = function(HUC) tryCatch(landscape_cleaning(landcover.layer = "D:/backfill/Version7.0/gdb_veghf_reference_condition_2018.gdb/veghf_2018",
                                                         boundary.layer = "data/base/gis/boundaries/HUC_8_EPSG3400.shp",
                                                         wildlife.layer = "data/base/wildlife-crossings/wildlife_crossings_100m.shp",
@@ -127,9 +108,12 @@ parLapply(core.input,
                                                         HFI.year = HFI), error = function(e) e)
 )
 
+landscape.cleaning.time <- Sys.time() - start.time
+start.time <- Sys.time()
+
 # Assign costs
 parLapply(core.input, 
-          as.list(watershed.ids[chunk.min:chunk.max]), 
+          as.list(watershed.ids), 
           fun = function(HUC) tryCatch(cost_assign(barrier.lookup = barrier.costs,
                                                    HUC.scale = huc.unit,
                                                    HUC.id = HUC,
@@ -137,70 +121,75 @@ parLapply(core.input,
                                                    HFI.year = HFI), error = function(e) e)
 )
 
+cost.assign.time <- Sys.time() - start.time
+start.time <- Sys.time()
+
 # Calculate costs
-reference.cost <- parLapply(core.input, 
-                            as.list(watershed.ids[chunk.min:chunk.max]), 
-                            fun = function(HUC) tryCatch(cost_distance(status = "reference",
-                                                                       HUC.scale = huc.unit,
-                                                                       HUC.id = HUC,
-                                                                       arcpy = arcpy,
-                                                                       HFI.year = HFI), error = function(e) e)
+parLapply(core.input, 
+          as.list(watershed.ids), 
+          fun = function(HUC) tryCatch(cost_distance(status = "reference",
+                                                     HUC.scale = huc.unit,
+                                                     HUC.id = HUC,
+                                                     arcpy = arcpy,
+                                                     HFI.year = HFI), error = function(e) e)
 )
 
-current.cost <- parLapply(core.input, 
-                          as.list(watershed.ids[chunk.min:chunk.max]), 
-                          fun = function(HUC) tryCatch(cost_distance(status = "current",
-                                                                     HUC.scale = huc.unit,
-                                                                     HUC.id = HUC,
-                                                                     arcpy = arcpy,
-                                                                     HFI.year = HFI), error = function(e) e)
+reference.cost.time <- Sys.time() - start.time
+start.time <- Sys.time()
+
+parLapply(core.input, 
+          as.list(watershed.ids), 
+          fun = function(HUC) tryCatch(cost_distance(status = "current",
+                                                     HUC.scale = huc.unit,
+                                                     HUC.id = HUC,
+                                                     arcpy = arcpy,
+                                                     HFI.year = HFI), error = function(e) e)
 )
+
+current.cost.time <- Sys.time() - start.time
+start.time <- Sys.time()
 
 stopCluster(core.input)
 
+landscape.cleaning.time
+cost.assign.time
+reference.cost.time
+current.cost.time
 
-# Initialize the restart if there are watersheds left to run
-if (chunks[chunk.id, "Max"] != max(chunks$Max)) {
+# Load shapefile for storing the results
+# No movement cost should ever be 0, so this will flag if watersheds are not processed
+move.costs <- read_sf("data/base/gis/boundaries/HUC_8_EPSG3400.shp")
+move.costs$UpCur <- 0 
+move.costs$LowCur <- 0 
+move.costs$GrCur <- 0 
+move.costs$UpRef <- 0 
+move.costs$LowRef <- 0 
+move.costs$GrRef <- 0 
+
+# Determine files that were created
+results.list <- list.files("data/processed/huc-8/2018/movecost/", full.names = TRUE)
+
+# Data packaging
+for(watershed in watershed.ids) {
   
-  # Update the iteration call
-  chunk.id <- chunk.id + 1
-  save(chunk.id, file = "data/base/tracking/chunk-id.Rdata")
+  # Current
+  load(results.list[grep(paste0("current-", watershed, ".Rdata"), results.list)])
+  move.costs[move.costs$HUC_8 == watershed, "UpCur"] <- move.results[, "UFSource"]
+  move.costs[move.costs$HUC_8 == watershed, "LowCur"] <- move.results[, "LFSource"]
+  move.costs[move.costs$HUC_8 == watershed, "GrCur"] <- move.results[, "GSource"]
   
-  # Clear memory
-  rm(list=ls())
-  gc()
-  
-  # Restart
-  restartSession(command = 'source("src/01_data-cleaning-multicore.R")')
-  
-} else {
-  
-  # Update the iteration call (pushes chunk id to be greater than expected max)
-  chunk.id <- chunk.id + 1
-  save(chunk.id, file = "data/base/tracking/chunk-id.Rdata")
-  
-  # Clear memory
-  rm(list=ls())
-  gc()
+  # Reference
+  load(results.list[grep(paste0("reference-", watershed, ".Rdata"), results.list)])
+  move.costs[move.costs$HUC_8 == watershed, "UpRef"] <- move.results[, "UFSource"]
+  move.costs[move.costs$HUC_8 == watershed, "LowRef"] <- move.results[, "LFSource"]
+  move.costs[move.costs$HUC_8 == watershed, "GrRef"] <- move.results[, "GSource"]
   
 }
 
+# Store results
+write_sf(obj = move.costs,
+         dsn = paste0("data/processed/huc-", huc.unit, "/", HFI, "/movecost/huc-", huc.unit, "-movecost_", HFI, ".shp"),
+         quiet = TRUE)
 
-# # Will need to move to a separate script if this sourcing version works
-# # Format the reference and current cost to align with the shapefile
-# huc.names <- unlist(lapply(current.cost, function(x) rownames(x)))
-# current.cost <- matrix(unlist(current.cost), ncol = 3, nrow = nrow(move.costs), byrow = TRUE,
-#                        dimnames = list(huc.names, c("UpCur", "LowCur", "GrCur")))
-# current.cost <- current.cost[move.costs$HUC_8, ]
-# move.costs <- cbind(move.costs, current.cost)
-# 
-# huc.names <- unlist(lapply(reference.cost, function(x) rownames(x)))
-# reference.cost <- matrix(unlist(reference.cost), ncol = 3, nrow = nrow(move.costs), byrow = TRUE,
-#                          dimnames = list(huc.names, c("UpRef", "LowRef", "GrRef")))
-# reference.cost <- reference.cost[move.costs$HUC_8, ]
-# move.costs <- cbind(move.costs, reference.cost)
-# 
-# # Store results
-# write_sf(obj = move.costs,
-#          dsn = paste0("data/processed/huc-", huc.unit, "/", HFI, "/movecost/huc-", huc.unit, "-movecost_", HFI, ".shp"),
-#          quiet = TRUE)
+rm(list=ls())
+gc()
