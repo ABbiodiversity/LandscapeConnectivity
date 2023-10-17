@@ -1,7 +1,7 @@
 #
 # Title: Landscape connectivity index
 # Created: Sept 14th, 2020
-# Last Updated: October 21st, 2022
+# Last Updated: October 13th, 2023
 # Author: Brandon Allen
 # Objectives: Functions required to calculate landscape connectivity
 # Keywords: Data preparation, Landscape Connectivity, Network Visualization
@@ -17,6 +17,11 @@ data_prep <- function(status, dispersal.distance, minimum.patch.size, harvest.re
   
   # Define the geodatabase location
   arcpy$env$workspace <- paste0(getwd(), "/data/processed/huc-", HUC.scale, "/", HFI, "/gis/", HUC.id, ".gdb")
+  
+  # Calculate the area of the focal boundary
+  arcpy$CalculateGeometryAttributes_management(in_features = "boundary", 
+                                               geometry_property = list(c("TotalArea", "AREA_GEODESIC")), 
+                                               area_unit = "SQUARE_METERS")
   
   # Identify which landcover classes are available
   layer.id <- ifelse(status == "Current", "current_landcover", "reference_landcover")
@@ -50,8 +55,7 @@ data_prep <- function(status, dispersal.distance, minimum.patch.size, harvest.re
       ################## Final Decision: All upland forests are merged together (native and harvest). The total area of the polygon is weighted based on the recovery curve.
       
       # Select all upland forests 
-      forest.types <- unique.covers[grep("Coniferous", unique.covers)]
-      forest.types <- c(forest.types, unique.covers[grep("Deciduous", unique.covers)])
+      forest.types <- c(unique.covers[grep("Coniferous", unique.covers)], unique.covers[grep("Deciduous", unique.covers)])
       
       arcpy$Select_analysis(in_features = layer.id, 
                             out_feature_class = paste0(native.type, "_", status, "_predissolve"), 
@@ -173,34 +177,44 @@ data_prep <- function(status, dispersal.distance, minimum.patch.size, harvest.re
 
   }
   
-  return(native.covers)
-  
 }
   
 ##########################
-# Landscape Connectivity # Need to implement saving function of patch contributions
-##########################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Landscape Connectivity # 
+##########################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-landscape_connectivity<- function(status, native.type, watershed.costs, dispersal.threshold, HUC.scale, HUC.id, HFI.year, results, arcpy) {
+landscape_connectivity <- function(status, native.type, watershed.costs, dispersal.threshold, HUC.scale, HUC.id, HFI.year, arcpy, numpy) {
         
   # Define the geodatabase location
-  arcpy$env$workspace <- paste0(getwd(), "/data/processed/huc-", HUC.scale, "/", HFI, "/gis/", HUC.id, ".gdb")
+  arcpy$env$workspace <- paste0(getwd(), "/data/processed/huc-", HUC.scale, 
+                                "/", HFI, "/gis/", HUC.id, ".gdb")
   
-  # Calculate the area of the focal boundary
-  arcpy$CalculateGeometryAttributes_management(in_features = "boundary", 
-                                               geometry_property = list(c("TotalArea", "AREA_GEODESIC")), 
-                                               area_unit = "SQUARE_METERS")
+  # Create matrix for storing the results
+  results <- as.data.frame(matrix(data = NA, nrow = 1, ncol = 4, 
+                    dimnames = list(HUC.id, c("HUC_8", "Habitat_Area", "ECA",  "Watershed_Area"))))
   
   # Calculate total area of the focal boundary
-  total.area <- read_sf(paste0("data/processed/huc-", HUC.scale, "/", HFI, "/gis/", HUC.id, ".gdb"),
+  total.area <- read_sf(paste0("data/processed/huc-", HUC.scale, "/", 
+                               HFI, "/gis/", HUC.id, ".gdb"),
                         layer = "boundary")
   total.area <- round(total.area$TotalArea / 1000000, 3) # convert to km2
   
+  # Check if there is a distance matrix for that habitat type. If not, return empty results
+  
+  if(!arcpy$Exists(paste0(native.type, "_", status, "_distmatrix"))) {
+    
+    results[HUC.id, c("HUC_8", "Habitat_Area", "ECA",  "Watershed_Area")] <- c(HUC.id, NA, NA, total.area)
+    return(results)
+    
+  }
+  
   # Load the distance matrix and native polygons into memory
-  patch.dist <- read_sf(dsn = paste0("data/processed/huc-", HUC.scale, "/", HFI.year, "/gis/", HUC.id, ".gdb"),
+  patch.dist <- read_sf(dsn = paste0("data/processed/huc-", HUC.scale, 
+                                     "/", HFI.year, "/gis/", HUC.id, ".gdb"),
                         layer = paste0(native.type, "_", status, "_distmatrix"))
   
-  native.patches <- read_sf(dsn = paste0("data/processed/huc-", HUC.scale, "/", HFI.year, "/gis/", HUC.id, ".gdb"),
+  native.patches <- read_sf(dsn = paste0("data/processed/huc-", HUC.scale, 
+                                         "/", HFI.year, "/gis/", HUC.id, ".gdb"),
                             layer = paste0(native.type, "_", status, "_viable"))
   native.patches$TotalAreakm <- native.patches$TotalArea / 1000000 # Convert to km2
   
@@ -212,16 +226,16 @@ landscape_connectivity<- function(status, native.type, watershed.costs, dispersa
   # If there are fewer than 2 native patches, set to NA
   if(nrow(native.patches) < 2) {
     
-    results[[col.id]][HUC.id, "HUC_8"] <- HUC.id
-    
+    results[HUC.id, c("HUC_8", "Habitat_Area", "ECA",  "Watershed_Area")] <- c(HUC.id, NA, NA, total.area)
     return(results)
     
   }
   
-  # There are going to be patches that are not connected to any other patch. Add them to the patch distance file. 
-  # NEAR_DIST will be given a value of 0
+  # There are going to be patches that are not connected to any other patch. 
+  # Add them to the patch distance file. NEAR_DIST will be given a value of 0
   patch.list <- 1:nrow(native.patches)
-  isolated.patched <- patch.list[!(patch.list %in% unique(c(patch.dist$IN_FID, patch.dist$NEAR_FID)))]
+  isolated.patched <- patch.list[!(patch.list %in% unique(c(patch.dist$IN_FID, 
+                                                            patch.dist$NEAR_FID)))]
   
   # By saving the column names, we catch instances where there are no patches that are within the specified distance to each other
   column.names <- colnames(patch.dist)
@@ -248,15 +262,13 @@ landscape_connectivity<- function(status, native.type, watershed.costs, dispersa
   ##########################
   
   # Create graph, make sure to add vertice flag
-  landscape.matrix <- graph_from_data_frame(d = patch.dist[, 1:2], vertices = rownames(native.patches))
+  landscape.matrix <- graph_from_data_frame(d = patch.dist[, 1:2], 
+                                            vertices = rownames(native.patches))
   E(landscape.matrix)$weight <- patch.dist$Log # Add weights
   
-  # Calculate index and store required results
-  results[[col.id]][HUC.id, "HUC_8"] <- HUC.id
-  
-  #
-  # Matrix Version
-  #
+  ##################
+  # Matrix Version #
+  ##################
   
   if(estimate.memory(dat = c(nrow(native.patches), nrow(native.patches)), unit = "gb") < 10) {
     
@@ -270,38 +282,42 @@ landscape_connectivity<- function(status, native.type, watershed.costs, dispersa
     
     matrix.sum <- rowSums(habitat.matrix * dist.matrix)
     
-    results[[col.id]][HUC.id, "Habitat_Area"] <- sum(native.patches$TotalAreakm)
+    results[HUC.id, c("HUC_8", "Habitat_Area", "ECA",  "Watershed_Area")] <- c(HUC.id,  sum(native.patches$TotalAreakm),
+                                                                               sqrt(sum(matrix.sum)), total.area)
     
-    results[[col.id]][HUC.id, "ECA"] <- sqrt(sum(matrix.sum))
+    ##################################
+    # Append the contribution values #
+    ##################################
     
-    results[[col.id]][HUC.id, "Watershed_Area"] <- total.area
+    # Create list of tuple results
+    contribution <- list()
     
-    # Append the contribution values
-    arcpy$AddField_management(paste0(native.type, "_", status, "_viable"), "Contribution", "FLOAT")
-    
-    # Create UpdateCursor to add the contribution information
-    cursor <- arcpy$da$UpdateCursor(in_table = paste0(native.type, "_", status, "_viable"), 
-                                    field_names = list("Contribution"))
-    
-    # Update each row in the cursor
-    row <- iter_next(cursor)
-    iter <- 1
-    while (!is.null(row)) {
+    for(x in 1:length(matrix.sum)) {
       
-      row[[1]] <- matrix.sum[iter]
-      cursor$updateRow(row)
-      row <- iter_next(cursor)  
-      
-      iter <- iter + 1
+      contribution[[x]] <- tuple(x, matrix.sum[x])
       
     }
     
-    # Clear row and cursor
-    rm(row, cursor)
+    # Convert to a numpy array
+    contribution <- numpy$array(contribution,
+                             dtype = list(tuple('OBJECTID','float32'),
+                                          tuple('Contribution','float32')))
+    
+    # Store using extend table
+    arcpy$da$ExtendTable(paste0(native.type, "_", status, "_viable"),
+                         "OBJECTID",
+                         contribution,
+                         "OBJECTID",
+                         FALSE)
+
+    return(results)
+  
+  }else {
+    
+    results[HUC.id, c("HUC_8", "Habitat_Area", "ECA",  "Watershed_Area")] <- c(HUC.id, NA, NA, total.area)
+    return(results)
     
   }
-
-  return(results)
   
 }
 
