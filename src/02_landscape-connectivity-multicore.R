@@ -1,14 +1,11 @@
 #
 # Title: Calculation of landscape connectivity (Multicore)
 # Created: February 9th, 2022
-# Last Updated: October 12th, 2023
+# Last Updated: October 16th, 2023
 # Author: Brandon Allen
 # Objectives: Process the cleaned GIS files for the connectivity index
 # Keywords: Notes, Multi-class Landscape Connectivity, Visualization
 #
-
-# ISSUES TO ADDRESS
-# 1) Identify where rounding error that results in current condition being greater than reference (HUC 18020102)
 
 #########
 # Notes #
@@ -32,7 +29,7 @@ library(parallel)
 library(sf)
 
 # Load function
-source("src/landscape-connectivity-v7_functions.R")
+source("src/landscape-connectivity_functions.R")
 
 # Define threshold for the probability distribution.
 # Threshold equals 5% probability of reach the distance threshold (250m; log(0.05) / 250)
@@ -46,7 +43,7 @@ minimum.patch.size <- 10000
 HFI <- 2018
 huc.unit <- 8
 watershed.costs <- read_sf("data/processed/huc-8/2018/movecost/huc-8-movecost_2018.shp")
-watershed.ids <- unique(watershed.costs$HUC_8)[1:14]
+watershed.ids <- unique(watershed.costs$HUC_8)
 
 # Define the recovery curve
 load("data/lookup/harvest-recovery-curves_80years.Rdata")
@@ -228,15 +225,73 @@ stopCluster(core.input)
 # Package the results #
 #######################
 
-# Load information and package
+# Create results template
+results.connect <- data.frame(HUC_8 = watershed.ids,
+                              UplandForestCur = NA,
+                              UplandForestRef = NA,
+                              UplandForestArea = NA,
+                              LowlandForestCur = NA,
+                              LowlandForestRef = NA,
+                              LowlandForestArea = NA,
+                              GrasslandCur = NA,
+                              GrasslandRef = NA,
+                              GrasslandArea = NA)
+rownames(results.connect) <- results.connect$HUC_8
+
+# For each cover type, loop through the results by watershed
+for (cover in c("Grassland", "UplandForest", "LowlandForest")) {
+  
+  for (watershed in 1:length(watershed.ids)) {
+    
+    # Current
+    temp.data <- results.current[[cover]][[watershed]]
+    results.connect[as.character(temp.data["HUC_8"]), paste0(cover, "Cur")] <- as.numeric(temp.data["ECA"])
+    
+    # Reference
+    temp.data <- results.reference[[cover]][[watershed]]
+    results.connect[as.character(temp.data["HUC_8"]), paste0(cover, "Ref")] <- as.numeric(temp.data["ECA"])
+    results.connect[as.character(temp.data["HUC_8"]), paste0(cover, "Area")] <- as.numeric(temp.data["Habitat_Area"])
+    
+    rm(temp.data)
+    
+  }
+  
+}
+
+# Calculate the combined area-weighted index
+results.connect$UplandForestW <- (results.connect$UplandForestCur / results.connect$UplandForestRef) * 
+  (results.connect$UplandForestArea / rowSums(results.connect[, c("UplandForestArea",
+                                                                  "LowlandForestArea", 
+                                                                  "GrasslandArea")], na.rm = TRUE))
+
+results.connect$LowlandForestW <- (results.connect$LowlandForestCur / results.connect$LowlandForestRef) * 
+  (results.connect$LowlandForestArea / rowSums(results.connect[, c("UplandForestArea",
+                                                                   "LowlandForestArea", 
+                                                                   "GrasslandArea")], na.rm = TRUE))
+
+results.connect$GrasslandW <- (results.connect$GrasslandCur / results.connect$GrasslandRef) * 
+  (results.connect$GrasslandArea / rowSums(results.connect[, c("UplandForestArea",
+                                                               "LowlandForestArea", 
+                                                               "GrasslandArea")], na.rm = TRUE))
+
+results.connect$Connect <- rowSums(results.connect[, c("UplandForestW", "LowlandForestW", "GrasslandW")], na.rm = TRUE) * 100
+results.connect$Connect[results.connect$Connect > 100] <- 100 # Masking values greater than 100 do to rounding error.
 
 # Add comment information 
-comment(results.list) <- c("Landscape connectivity analysis based on the 2018 HFI",
+comment(results.reference) <- c("Landscape connectivity analysis based on the 2018 HFI",
                            "Backfill version 7.0", 
-                           "Started on August 23rd, 2023")
+                           "Started on October 14th, 2023")
+
+comment(results.current) <- c("Landscape connectivity analysis based on the 2018 HFI",
+                                "Backfill version 7.0", 
+                                "Started on October 14th, 2023")
+
+comment(results.connect) <- c("Landscape connectivity analysis based on the 2018 HFI",
+                                "Backfill version 7.0", 
+                                "Started on October 14th, 2023")
 
 # Save each watershed iteration
-save(results.list, file = paste0("results/tables/connectivity_HFI", HFI, "_v7.RData"))
+save(results.reference, results.current, results.connect, file = paste0("results/tables/connectivity_HFI", HFI, ".RData"))
 
 rm(list=ls())
 gc()

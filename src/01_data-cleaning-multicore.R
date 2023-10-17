@@ -1,7 +1,7 @@
 #
 # Title: Data cleaning for the landscape connectivity indicator (Multicore)
 # Created: February 4th, 2022
-# Last Updated: September 27th, 2022
+# Last Updated: October 13th, 2023
 # Author: Brandon Allen
 # Objectives: Clean GIS data required for creating the landscape connectivity indicator. 
 # Keywords: Notes, Initialization
@@ -32,13 +32,13 @@ library(reticulate)
 library(scales)
 library(sf)
 
-source("src/data-cleaning-v7_functions.R")
+source("src/data-cleaning_functions.R")
 
 # Define HUC units and HFI inventories
 HFI <- 2018
 huc.unit <- 8
 watershed.ids <- read_sf("data/base/gis/boundaries/HUC_8_EPSG3400.shp")
-watershed.ids <- watershed.ids$HUC_8[1:14]
+watershed.ids <- watershed.ids$HUC_8
 
 # Landcover lookup
 landcover.classes <- read.csv("data/lookup/landcover-classification.csv")
