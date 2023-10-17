@@ -1,15 +1,11 @@
 #
 # Title: Calculation of landscape connectivity
 # Created: February 9th, 2022
-# Last Updated: October 31st, 2022
+# Last Updated: August 24th, 2023
 # Author: Brandon Allen
 # Objectives: Process the cleaned GIS files for the connectivity index
 # Keywords: Notes, Multi-class Landscape Connectivity, Visualization
 #
-
-# ISSUES TO ADDRESS
-# 1) Identify where rounding error that results in current condition being greater than reference (HUC 18020102)
-# 2) Resolve issue when only a single patch is present (If there is a single habitat patch, there is some marginal connectivity)
 
 #########
 # Notes #
@@ -47,7 +43,7 @@ watershed.costs <- read_sf("data/processed/huc-8/2018/movecost/huc-8-movecost_20
 watershed.ids <- unique(watershed.costs$HUC_8)
 
 # Define the recovery curve
-load("data/lookup/harvest-recovery-curves.Rdata")
+load("data/lookup/harvest-recovery-curves_80years.Rdata")
 
 # Define threshold for the probability distribution.
 # Threshold equals 5% probability of reach the distance threshold (250m; log(0.05) / 250)
@@ -62,7 +58,7 @@ py_discover_config() # We need version 3.7
 py_config() # Double check it is version 3.7
 
 # Set python 
-use_python(python = "C:/Users/ballen/miniconda3/envs/r-reticulate/python.exe")
+use_python(python = "C:/Users/ballen/AppData/Local/r-miniconda/envs/r-reticulate/python.exe")
 
 # Load arcpy
 arcpy <- import('arcpy')
@@ -88,7 +84,7 @@ for (HUC in watershed.ids) {
   native.classes <- data_prep(status = "Current",
                               dispersal.distance = dispersal.distance,
                               minimum.patch.size = minimum.patch.size, 
-                              harvest.recovery = harvest.recovery,
+                              harvest.recovery = recovery.curve,
                               HUC.scale = huc.unit,
                               HUC.id = HUC,
                               HFI.year = HFI,
@@ -112,7 +108,7 @@ for (HUC in watershed.ids) {
   native.classes <- data_prep(status = "Reference",
                               dispersal.distance = dispersal.distance,
                               minimum.patch.size = minimum.patch.size, 
-                              harvest.recovery = harvest.recovery,
+                              harvest.recovery = recovery.curve,
                               HUC.scale = huc.unit,
                               HUC.id = HUC,
                               HFI.year = HFI,
@@ -134,7 +130,8 @@ for (HUC in watershed.ids) {
   
   # Add comment information 
   comment(results.list) <- c("Landscape connectivity analysis based on the 2018 HFI",
-                             "Started on October 28th, 2022")
+                             "Backfill version 7.0", 
+                             "Started on August 23rd, 2023")
   
   # Save each watershed iteration
   save(results.list, file = paste0("results/tables/connectivity_HFI", HFI, ".RData"))
