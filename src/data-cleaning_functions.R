@@ -1,7 +1,7 @@
 #
 # Title: Data cleaning functions
 # Created: November 24th, 2020
-# Last Updated: October 21st, 2022
+# Last Updated: September 22nd, 2023
 # Author: Brandon Allen
 # Objectives: Functions required for cleaning the layers required for landscape connectivity
 # Keywords: Landscape cleaning, Cost assign, Cost distance
@@ -13,9 +13,9 @@
 
 ######################
 # Landscape cleaning # 
-######################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+######################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-landscape_cleaning <- function(landcover.layer, boundary.layer, HUC.scale, HUC.id, HFI.year, arcpy) {
+landscape_cleaning <- function(landcover.layer, boundary.layer, wildlife.layer, HUC.scale, HUC.id, HFI.year, arcpy) {
   
   ################## Question: Should we buffer the human footprint layer to remove artifacts?
   # DECISION POINT # Implementation: We perform a 5m and -5m buffer to remove artifacts that would impact patch delineation
@@ -47,8 +47,45 @@ landscape_cleaning <- function(landcover.layer, boundary.layer, HUC.scale, HUC.i
   # Extract landcover backfill layer
   arcpy$PairwiseClip_analysis(in_features = landcover.layer, 
                               clip_features = "boundary", 
-                              out_feature_class = "landcover")
+                              out_feature_class = "landcover_nocrossing")
   
+  ##################################
+  # Clip Wildlife Crossings to HUC #
+  ##################################
+  
+  arcpy$PairwiseClip_analysis(in_features = wildlife.layer, 
+                              clip_features = "boundary", 
+                              out_feature_class = "wildlife_crossing")
+  wildlife.logical <- arcpy$GetCount_management(in_rows = "wildlife_crossing")
+  
+  ############################################
+  # Union with Wildlife Corridors if present # 
+  ############################################
+  
+  if(wildlife.logical[0] != "0") {
+    
+    arcpy$Union_analysis(in_features = "landcover_nocrossing; wildlife_crossing", 
+                         out_feature_class = "landcover_crossing")
+    
+    arcpy$PairwiseClip_analysis(in_features = "landcover_crossing", 
+                                clip_features = "boundary", 
+                                out_feature_class = "landcover")
+    
+    # Remove intermediate files
+    arcpy$Delete_management("landcover_crossing")
+    
+  } else {
+    
+    arcpy$PairwiseClip_analysis(in_features = "landcover_nocrossing", 
+                                clip_features = "boundary", 
+                                out_feature_class = "landcover")
+    
+  }
+  
+  # Remove intermediate files
+  arcpy$Delete_management("wildlife_crossing")
+  arcpy$Delete_management("landcover_nocrossing")
+
   ############################
   # Simplify landcover layer #
   ############################
@@ -61,6 +98,12 @@ landscape_cleaning <- function(landcover.layer, boundary.layer, HUC.scale, HUC.i
   arcpy$CalculateField_management(in_table = "landcover",
                                   field = "Combined_ChgByCWCS",
                                   expression = "!Combined_ChgByCWCS!.replace('-', '')",
+                                  expression_type = "PYTHON")
+  
+  # Replace " " in landcover names
+  arcpy$CalculateField_management(in_table = "landcover",
+                                  field = "Combined_ChgByCWCS",
+                                  expression = "!Combined_ChgByCWCS!.replace(' ', '')",
                                   expression_type = "PYTHON")
   
   # Create the replace function for landcovers
@@ -125,7 +168,17 @@ def Reclass(arg):
     if arg is 'TreedWetlandMixedwood':
         return 'LowlandForest'
     if arg is 'Water':
-        return 'Water'"
+        return 'Water'
+    if arg is 'Stream':
+        return 'Water'
+    if arg is 'Openwater':
+        return 'Water'
+    if arg is 'Fen':
+        return 'LowlandForest'
+    if arg is 'Bog':
+        return 'LowlandForest'
+    if arg is 'Swamp':
+        return 'LowlandForest'"
   
   # Create simplified reference condition
   arcpy$CalculateField_management(in_table = "landcover",
@@ -134,59 +187,54 @@ def Reclass(arg):
                                   expression_type = "PYTHON", 
                                   code_block = replace_function)
   
-  # Copy FEATURE_TY to a new column
+  # Define the python function for defining the current condition
+  replace_function <- "
+def Reclass(current, reference, year, hfiyear):
+    if current == '':
+        return reference
+    if current == 'HARVEST-AREA' and ((hfiyear - year) < 4):
+        return 'HARVEST-AREA-4'
+    if current == 'HARVEST-AREA' and ((hfiyear - year) < 15) and ((hfiyear - year) >= 4):
+        return 'HARVEST-AREA-4-15'
+    if current == 'HARVEST-AREA' and ((hfiyear - year) == 15):
+        return 'HARVEST-AREA-15'
+    if current == 'HARVEST-AREA' and ((hfiyear - year) >= 80):
+        return 'reference'
+    if current == 'HARVEST-AREA' and ((hfiyear - year) > 15) and ((hfiyear - year) < 80):
+        return 'HARVEST-AREA-{age}'.format(age = hfiyear - year)
+    if current != '':
+        return current"
+  
   arcpy$CalculateField_management(in_table = "landcover",
                                   field = "Current",
-                                  expression = "!FEATURE_TY!",
-                                  expression_type = "PYTHON")
+                                  expression = paste0("Reclass(!FEATURE_TY!, !Reference!, !YEAR!, ", HFI.year, ")"),
+                                  expression_type = "PYTHON", 
+                                  code_block = replace_function)
   
-  # Create UpdateCursor to replace blank footprint with reference & add ages to HARVEST-AREA
-  cursor <- arcpy$da$UpdateCursor(in_table = "landcover", 
-                                 field_names = list("Current", "YEAR", "Reference"),
-                                 where_clause = "\"Current\" IN ('', 'HARVEST-AREA')")
-  
-  # Update each row in the cursor
-  row <- iter_next(cursor)
-  while (!is.null(row)) {
+  # If wildlife crossings are present, correct the landcover type
+  if(wildlife.logical[0] != "0") {
     
-    # If no footprint is present, replace with native cover
-    if(row[[1]] == "") {
-      
-      # Update the value
-      row[[1]] <- row[[3]]
-      cursor$updateRow(row)
+    # Define the python function for correcting wildlife corridors. Need to correct both current and reference conditions
+    replace_function <- "
+def Reclass(habitat, purpose):
+    if purpose == 'wildlife':
+        return 'Coniferous'
+    if purpose != 'wildlife':
+        return habitat"
 
-    } 
+    arcpy$CalculateField_management(in_table = "landcover",
+                                    field = "Current",
+                                    expression = "Reclass(!Current!, !Purpose!)",
+                                    expression_type = "PYTHON", 
+                                    code_block = replace_function)
     
-    if(row[[1]] == "HARVEST-AREA") {
-      
-      # Harvest areas with resistance (0-15 years)
-      if(HFI.year - row[[2]] == 15) {row[[1]] <- "HARVEST-AREA-15"} # Old harvest areas
-      if(HFI.year - row[[2]] < 15 & HFI.year - row[[2]] >= 4) {row[[1]] <- "HARVEST-AREA-4-15"} # Medium harvest areas
-      if(HFI.year - row[[2]] < 4) {row[[1]] <- "HARVEST-AREA-4"} # Young harvest areas
-      
-      # If harvest has an unknown age, assume it was harvested in 1940
-      if(row[[2]] == 0) {row[[1]] <- paste0(row[[3]], "-", HFI.year-1940)} # Unknown ages are assumed old
-      
-      # Otherwise, calculate stand age
-      if(row[[1]] == "HARVEST-AREA" & HFI.year - row[[2]] > 15) {row[[1]] <- paste0(row[[3]], "-", HFI.year-row[[2]])}
-      
-      # Update the value
-      cursor$updateRow(row)
-      
-    }
-    
-    # Go to the next row
-    row <- iter_next(cursor)  
+    arcpy$CalculateField_management(in_table = "landcover",
+                                    field = "Reference",
+                                    expression = "Reclass(!Reference!, !Purpose!)",
+                                    expression_type = "PYTHON", 
+                                    code_block = replace_function)
     
   }
-  
-  # Clear row and cursor
-  rm(row, cursor)
-
-  # # Repair any stray geometry
-  # arcpy$RepairGeometry_management(in_features = "landcover",
-  #                                 delete_null = "KEEP_NULL")
   
   # Dissolve landcover into simplified current and reference landcovers.
   arcpy$PairwiseDissolve_analysis(in_features = "landcover", 
@@ -206,7 +254,7 @@ def Reclass(arg):
 
 ###############
 # Cost assign # 
-###############~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+###############~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 cost_assign <- function(HUC.scale, HUC.id, HFI.year, barrier.lookup, arcpy) {
   
@@ -295,9 +343,9 @@ cost_assign <- function(HUC.scale, HUC.id, HFI.year, barrier.lookup, arcpy) {
 
 #################
 # Cost distance # 
-#################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-cost_distance <- function(status, HUC.scale, HUC.id, HFI.year, move.results, arcpy) {
+cost_distance <- function(status, HUC.scale, HUC.id, HFI.year, arcpy) {
   
   # Require packages
   require(sf)
@@ -324,6 +372,10 @@ cost_distance <- function(status, HUC.scale, HUC.id, HFI.year, move.results, arc
   ###########################
   # Calculate cost distance #
   ###########################
+  
+  # Create matrix for storing the results
+  move.results <- matrix(data = NA, ncol = 3, nrow = 1,
+                         dimnames = list(HUC.id, c("UFSource", "LFSource", "GSource")))
   
   for (habitat.type in habitat.avail) {
     
@@ -376,33 +428,27 @@ cost_distance <- function(status, HUC.scale, HUC.id, HFI.year, move.results, arc
     # Divide the two rasters to get the average multiplier cost for moving 
     arcpy$Divide_3d(in_raster_or_constant1 = "CostDis_sour1", 
                     in_raster_or_constant2 = "EucDist_sour1", 
-                    out_raster = paste0(getwd(), "/data/processed/huc-", HUC.scale, "/", HFI.year, "/scratch/movecost.tif"))
+                    out_raster = paste0(getwd(), "/data/processed/huc-", HUC.scale, "/", HFI.year, "/scratch/movecost", HUC.id, ".tif"))
     
     # Store results
-    cost.weight <- raster(paste0(getwd(), "/data/processed/huc-", HUC.scale, "/", HFI.year, "/scratch/movecost.tif"))
+    cost.weight <- raster(paste0(getwd(), "/data/processed/huc-", HUC.scale, "/", HFI.year, "/scratch/movecost", HUC.id, ".tif"))
     cost.weight <- values(cost.weight)[!is.na(values(cost.weight))] # Remove NA
     cost.weight <- cost.weight[cost.weight >= 1]
+    move.results[, habitat.type] <- ifelse(is.na(mean(cost.weight)) == TRUE, 1, mean(cost.weight))
     
-    # Define names
-    state.id <- ifelse(status == "current", "Cur", "Ref")
-    if(habitat.type == "UFSource") {col.id <- paste0("Up", state.id)}
-    if(habitat.type == "LFSource") {col.id <- paste0("Low", state.id)}
-    if(habitat.type == "GSource") {col.id <- paste0("Gr", state.id)}
-    
-    move.results[move.results$HUC_8 == HUC.id, col.id] <- ifelse(is.na(mean(cost.weight)) == TRUE, 1, mean(cost.weight))
-
     # Remove all layers
     arcpy$Delete_management(in_data = "costraster")
     arcpy$Delete_management(in_data = "sourceclass")
     arcpy$Delete_management(in_data = "sourceraster")
     arcpy$Delete_management(in_data = "CostDis_sour1")
     arcpy$Delete_management(in_data = "EucDist_sour1")
-    arcpy$Delete_management(in_data = paste0(getwd(), "/data/processed/huc-", HUC.scale, "/", HFI.year, "/scratch/movecost.tif"))
+    arcpy$Delete_management(in_data = paste0(getwd(), "/data/processed/huc-", HUC.scale, "/", HFI.year, "/scratch/movecost", HUC.id, ".tif"))
     rm(cost.weight)
     
   }
   
   # Return the cost results
-  return(move.results)
-  
+  save(move.results, file = paste0(getwd(), "/data/processed/huc-", HUC.scale, "/", 
+              HFI.year, "/movecost/", status, "-", HUC.id, ".Rdata"))
+ 
 }
