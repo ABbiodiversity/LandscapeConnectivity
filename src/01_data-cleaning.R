@@ -32,7 +32,7 @@ library(reticulate)
 library(scales)
 library(sf)
 
-source("src/data-cleaning-v7_functions.R")
+source("src/data-cleaning_functions.R")
 
 # Define HUC units and HFI inventories
 HFI <- 2018
