@@ -35,7 +35,7 @@ library(sf)
 source("src/data-cleaning_functions.R")
 
 # Define HUC units and HFI inventories
-HFI <- 2018
+HFI <- 2010
 huc.unit <- 8
 watershed.ids <- read_sf("data/base/gis/boundaries/HUC_8_EPSG3400.shp")
 watershed.ids <- watershed.ids$HUC_8
@@ -99,7 +99,7 @@ start.time <- Sys.time()
 # Clean the landscapes
 parLapply(core.input, 
           as.list(watershed.ids), 
-          fun = function(HUC) tryCatch(landscape_cleaning(landcover.layer = "D:/backfill/Version7.0/gdb_veghf_reference_condition_2018.gdb/veghf_2018",
+          fun = function(HUC) tryCatch(landscape_cleaning(landcover.layer = "D:/backfill/Version7.0/gdb_veghf_reference_condition_2021.gdb/veghf_2021",
                                                         boundary.layer = "data/base/gis/boundaries/HUC_8_EPSG3400.shp",
                                                         wildlife.layer = "data/base/wildlife-crossings/wildlife_crossings_100m.shp",
                                                         HUC.scale = huc.unit,
@@ -167,7 +167,7 @@ move.costs$LowRef <- 0
 move.costs$GrRef <- 0 
 
 # Determine files that were created
-results.list <- list.files("data/processed/huc-8/2018/movecost/", full.names = TRUE)
+results.list <- list.files(paste0("data/processed/huc-8/", HFI, "/movecost/", full.names = TRUE))
 
 # Data packaging
 for(watershed in watershed.ids) {

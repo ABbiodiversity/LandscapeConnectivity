@@ -40,9 +40,9 @@ dispersal.threshold <- log(0.05) / dispersal.distance
 minimum.patch.size <- 10000
 
 # Define HUC units, and cost matrix
-HFI <- 2018
+HFI <- 2010
 huc.unit <- 8
-watershed.costs <- read_sf("data/processed/huc-8/2018/movecost/huc-8-movecost_2018.shp")
+watershed.costs <- read_sf(paste0("data/processed/huc-8/2018/movecost/huc-8-movecost_", HFI, ".shp"))
 watershed.ids <- unique(watershed.costs$HUC_8)
 
 # Define the recovery curve
@@ -278,17 +278,17 @@ results.connect$Connect <- rowSums(results.connect[, c("UplandForestW", "Lowland
 results.connect$Connect[results.connect$Connect > 100] <- 100 # Masking values greater than 100 do to rounding error.
 
 # Add comment information 
-comment(results.reference) <- c("Landscape connectivity analysis based on the 2018 HFI",
+comment(results.reference) <- c("Landscape connectivity analysis based on the 2010 HFI",
                            "Backfill version 7.0", 
-                           "Started on October 14th, 2023")
+                           "Started on October 18th, 2023")
 
-comment(results.current) <- c("Landscape connectivity analysis based on the 2018 HFI",
+comment(results.current) <- c("Landscape connectivity analysis based on the 2010 HFI",
                                 "Backfill version 7.0", 
-                                "Started on October 14th, 2023")
+                                "Started on October 18th, 2023")
 
-comment(results.connect) <- c("Landscape connectivity analysis based on the 2018 HFI",
+comment(results.connect) <- c("Landscape connectivity analysis based on the 2010 HFI",
                                 "Backfill version 7.0", 
-                                "Started on October 14th, 2023")
+                                "Started on October 18th, 2023")
 
 # Save each watershed iteration
 save(results.reference, results.current, results.connect, file = paste0("results/tables/connectivity_HFI", HFI, ".RData"))
