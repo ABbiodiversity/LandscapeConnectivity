@@ -99,7 +99,7 @@ start.time <- Sys.time()
 # Clean the landscapes
 parLapply(core.input, 
           as.list(watershed.ids), 
-          fun = function(HUC) tryCatch(landscape_cleaning(landcover.layer = "D:/backfill/Version7.0/gdb_veghf_reference_condition_2021.gdb/veghf_2021",
+          fun = function(HUC) tryCatch(landscape_cleaning(landcover.layer = "D:/backfill/Version7.0/gdb_veghf_reference_condition_2010.gdb/veghf_2010",
                                                         boundary.layer = "data/base/gis/boundaries/HUC_8_EPSG3400.shp",
                                                         wildlife.layer = "data/base/wildlife-crossings/wildlife_crossings_100m.shp",
                                                         HUC.scale = huc.unit,
@@ -167,7 +167,7 @@ move.costs$LowRef <- 0
 move.costs$GrRef <- 0 
 
 # Determine files that were created
-results.list <- list.files(paste0("data/processed/huc-8/", HFI, "/movecost/", full.names = TRUE))
+results.list <- list.files(paste0("data/processed/huc-8/", HFI, "/movecost/"), full.names = TRUE)
 
 # Data packaging
 for(watershed in watershed.ids) {
