@@ -42,7 +42,7 @@ minimum.patch.size <- 10000
 # Define HUC units, and cost matrix
 HFI <- 2010
 huc.unit <- 8
-watershed.costs <- read_sf(paste0("data/processed/huc-8/2018/movecost/huc-8-movecost_", HFI, ".shp"))
+watershed.costs <- read_sf(paste0("data/processed/huc-8/", HFI, "/movecost/huc-8-movecost_", HFI, ".shp"))
 watershed.ids <- unique(watershed.costs$HUC_8)
 
 # Define the recovery curve
