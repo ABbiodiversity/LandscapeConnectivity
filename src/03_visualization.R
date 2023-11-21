@@ -1,122 +1,510 @@
 #
 # Title: Visualization of landscape connectivity
 # Created: October 11th, 2022
-# Last Updated: October 17th, 2022
+# Last Updated: November 20th, 2023
 # Author: Brandon Allen
 # Objectives: Visualize the landscape connectivity indicator.
-# Keywords: Notes, Visualization
+# Keywords: Notes, Connectivity, Resistance, Forest recovery
 #
 
 #########
 # Notes #
-#########~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+#########~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # 1) This analysis is run for each HUC 8 across the province.
-#
-#################
-# Visualization #
-#################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 
+################
+# Connectivity # 
+################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Clear memory
 rm(list=ls())
 gc()
 
-# Load libraries and source functions
+# Load libraries
 library(abmi.themes)
 library(ggplot2)
+library(ggpubr)
 library(MetBrewer)
 library(sf)
 
-# Load results
-load("results/tables/connectivity_HFI2018_v7.RData")
+# Source scripts
+source("src/visualization_functions.R")
 
-# Aspatial visualization
+# Load the results
+load("results/tables/connectivity_HFI2010.RData")
+landscape.connecivity.2010 <- results.connect
+load("results/tables/connectivity_HFI2018.RData")
+landscape.connecivity.2018 <- results.connect
+load("results/tables/connectivity_HFI2019.RData")
+landscape.connecivity.2019 <- results.connect
+load("results/tables/connectivity_HFI2020.RData")
+landscape.connecivity.2020 <- results.connect
+load("results/tables/connectivity_HFI2021.RData")
+landscape.connecivity.2021 <- results.connect
 
-# Save results
-png(paste0("results/figures/connectivity-HFI2018-histogramv7.png"),
-    width = 1800,
-    height = 1800, 
-    res = 300)
+rm(results.connect, results.current, results.reference)
 
-ggplot(data = results.connect, aes(x = Connect, col = "#004f63", fill = "#004f63")) + 
-  geom_histogram(bins = 100, show.legend = FALSE) +
-  scale_color_manual(values = "#004f63") +
-  scale_fill_manual(values = "#004f63") +
-  ggtitle(paste0("Landscape Connectivity (2018)")) + 
-  xlab("Connectivity (%)") +
-  ylab("Frequency") +
+# Load the blank shapefile
+connectivity.results <- read_sf("data/processed/huc-8/2010/movecost/huc-8-movecost_2010.dbf")
+
+# Align the rows
+landscape.connecivity.2010 <- landscape.connecivity.2010[connectivity.results$HUC_8, ]
+landscape.connecivity.2018 <- landscape.connecivity.2018[connectivity.results$HUC_8, ]
+landscape.connecivity.2019 <- landscape.connecivity.2019[connectivity.results$HUC_8, ]
+landscape.connecivity.2020 <- landscape.connecivity.2020[connectivity.results$HUC_8, ]
+landscape.connecivity.2021 <- landscape.connecivity.2021[connectivity.results$HUC_8, ]
+
+# Create the trend results
+upland.trend <- data.frame(HUC_8 = landscape.connecivity.2010$HUC_8,
+                           LC_2010 = (landscape.connecivity.2010$UplandForestCur / landscape.connecivity.2010$UplandForestRef) * 100,
+                                LC_2021 = (landscape.connecivity.2021$UplandForestCur / landscape.connecivity.2021$UplandForestRef) * 100)
+upland.trend$Difference <- upland.trend$LC_2021 - upland.trend$LC_2010
+
+lowland.trend <- data.frame(HUC_8 = landscape.connecivity.2010$HUC_8,
+                            LC_2010 = (landscape.connecivity.2010$LowlandForestCur / landscape.connecivity.2010$LowlandForestRef) * 100,
+                            LC_2021 = (landscape.connecivity.2021$LowlandForestCur / landscape.connecivity.2021$LowlandForestRef) * 100)
+lowland.trend$Difference <- lowland.trend$LC_2021 - lowland.trend$LC_2010
+
+grassland.trend <- data.frame(HUC_8 = landscape.connecivity.2010$HUC_8,
+                              LC_2010 = (landscape.connecivity.2010$GrasslandCur / landscape.connecivity.2010$GrasslandRef) * 100,
+                              LC_2021 = (landscape.connecivity.2021$GrasslandCur / landscape.connecivity.2021$GrasslandRef) * 100)
+grassland.trend$Difference <- grassland.trend$LC_2021 - grassland.trend$LC_2010
+
+total.trend <- data.frame(HUC_8 = landscape.connecivity.2010$HUC_8,
+                          LC_2010 = landscape.connecivity.2010$Connect,
+                          LC_2021 = landscape.connecivity.2021$Connect,
+                          Difference = landscape.connecivity.2021$Connect - landscape.connecivity.2010$Connect)
+
+# Append the differences
+upland.trend <- merge(connectivity.results, upland.trend, by = "HUC_8")
+lowland.trend <- merge(connectivity.results, lowland.trend, by = "HUC_8")
+grassland.trend <- merge(connectivity.results, grassland.trend, by = "HUC_8")
+total.trend <- merge(connectivity.results, total.trend, by = "HUC_8")
+
+#########
+# Total #
+#########
+
+# Append connectivity
+connectivity.results$Connect2010 <- landscape.connecivity.2010$Connect 
+connectivity.results$Connect2018 <- landscape.connecivity.2018$Connect 
+connectivity.results$Connect2019 <- landscape.connecivity.2019$Connect 
+connectivity.results$Connect2020 <- landscape.connecivity.2020$Connect 
+connectivity.results$Connect2021 <- landscape.connecivity.2021$Connect 
+
+connect.2010 <- lc_plot(data.in = connectivity.results, 
+                        habitat = "Connect2010", 
+                        title = "Connectivity 2010")
+
+connect.2018 <- lc_plot(data.in = connectivity.results, 
+                        habitat = "Connect2018", 
+                        title = "Connectivity 2018")
+
+connect.2019 <- lc_plot(data.in = connectivity.results, 
+                        habitat = "Connect2019", 
+                        title = "Connectivity 2019")
+
+connect.2020 <- lc_plot(data.in = connectivity.results, 
+                        habitat = "Connect2020", 
+                        title = "Connectivity 2020")
+
+connect.2021 <- lc_plot(data.in = connectivity.results, 
+                        habitat = "Connect2021", 
+                        title = "Connectivity 2021")
+
+ggsave(filename = "results/figures/indicator/landscape-connectivity.png",
+       plot = ggarrange(connect.2010, connect.2018,
+                        connect.2019, connect.2020, connect.2021,
+                        ncol = 3, nrow = 2),
+       height = 2400,
+       width = 2700,
+       dpi = 100,
+       units = "px")
+
+connect.2010.2021 <- difference_plot(data.in = total.trend, 
+                                     habitat = "Difference", 
+                                     title = "")
+
+ggsave(filename = "results/figures/support/landscape-connectivity-trend-spatial.png",
+       plot = connect.2010.2021,
+       height = 1200,
+       width = 900,
+       dpi = 100,
+       units = "px")
+
+trend.plot <- trend_plot(data.in = connectivity.results, 
+                         x = "2010", 
+                         y = "2021", 
+                         title = "Landscape Connectivity")
+
+ggsave(filename = "results/figures/support/landscape-connectivity-trend.png",
+       plot = trend.plot,
+       height = 800,
+       width = 800,
+       dpi = 100,
+       units = "px")
+
+#################
+# Upland Forest #
+#################
+
+# Append connectivity
+connectivity.results$Connect2010 <- (landscape.connecivity.2010$UplandForestCur / landscape.connecivity.2010$UplandForestRef) * 100
+connectivity.results$Connect2018 <- (landscape.connecivity.2018$UplandForestCur / landscape.connecivity.2018$UplandForestRef) * 100
+connectivity.results$Connect2019 <- (landscape.connecivity.2019$UplandForestCur / landscape.connecivity.2019$UplandForestRef) * 100
+connectivity.results$Connect2020 <- (landscape.connecivity.2020$UplandForestCur / landscape.connecivity.2020$UplandForestRef) * 100
+connectivity.results$Connect2021 <- (landscape.connecivity.2021$UplandForestCur / landscape.connecivity.2021$UplandForestRef) * 100
+
+connect.2010 <- lc_plot(data.in = connectivity.results, 
+                        habitat = "Connect2010", 
+                        title = "Upland Forest Connectivity 2010")
+
+connect.2018 <- lc_plot(data.in = connectivity.results, 
+                        habitat = "Connect2018", 
+                        title = "Upland Forest Connectivity 2018")
+
+connect.2019 <- lc_plot(data.in = connectivity.results, 
+                        habitat = "Connect2019", 
+                        title = "Upland Forest Connectivity 2019")
+
+connect.2020 <- lc_plot(data.in = connectivity.results, 
+                        habitat = "Connect2020", 
+                        title = "Upland Forest Connectivity 2020")
+
+connect.2021 <- lc_plot(data.in = connectivity.results, 
+                        habitat = "Connect2021", 
+                        title = "Upland Forest Connectivity 2021")
+
+ggsave(filename = "results/figures/indicator/upland-forest-connectivity.png",
+       plot = ggarrange(connect.2010, connect.2018,
+                        connect.2019, connect.2020, connect.2021,
+                        ncol = 3, nrow = 2),
+       height = 2400,
+       width = 2700,
+       dpi = 100,
+       units = "px")
+
+connect.2010.2021 <- difference_plot(data.in = upland.trend, 
+                                     habitat = "Difference", 
+                                     title = "")
+
+ggsave(filename = "results/figures/support/upland-forest-connectivity-trend-spatial.png",
+       plot = connect.2010.2021,
+       height = 1200,
+       width = 900,
+       dpi = 100,
+       units = "px")
+
+trend.plot <- trend_plot(data.in = connectivity.results, 
+                         x = "2010", 
+                         y = "2021", 
+                         title = "Upland Forest Connectivity")
+
+ggsave(filename = "results/figures/support/upland-forest-connectivity-trend.png",
+       plot = trend.plot,
+       height = 800,
+       width = 800,
+       dpi = 100,
+       units = "px")
+
+##################
+# Lowland Forest #
+##################
+
+# Append connectivity
+connectivity.results$Connect2010 <- (landscape.connecivity.2010$LowlandForestCur / landscape.connecivity.2010$LowlandForestRef) * 100
+connectivity.results$Connect2018 <- (landscape.connecivity.2018$LowlandForestCur / landscape.connecivity.2018$LowlandForestRef) * 100
+connectivity.results$Connect2019 <- (landscape.connecivity.2019$LowlandForestCur / landscape.connecivity.2019$LowlandForestRef) * 100
+connectivity.results$Connect2020 <- (landscape.connecivity.2020$LowlandForestCur / landscape.connecivity.2020$LowlandForestRef) * 100
+connectivity.results$Connect2021 <- (landscape.connecivity.2021$LowlandForestCur / landscape.connecivity.2021$LowlandForestRef) * 100
+
+connect.2010 <- lc_plot(data.in = connectivity.results, 
+                        habitat = "Connect2010", 
+                        title = "Lowland Forest Connectivity 2010")
+
+connect.2018 <- lc_plot(data.in = connectivity.results, 
+                        habitat = "Connect2018", 
+                        title = "Lowland Forest Connectivity 2018")
+
+connect.2019 <- lc_plot(data.in = connectivity.results, 
+                        habitat = "Connect2019", 
+                        title = "Lowland Forest Connectivity 2019")
+
+connect.2020 <- lc_plot(data.in = connectivity.results, 
+                        habitat = "Connect2020", 
+                        title = "Lowland Forest Connectivity 2020")
+
+connect.2021 <- lc_plot(data.in = connectivity.results, 
+                        habitat = "Connect2021", 
+                        title = "Lowland Forest Connectivity 2021")
+
+ggsave(filename = "results/figures/indicator/lowland-forest-connectivity.png",
+       plot = ggarrange(connect.2010, connect.2018,
+                        connect.2019, connect.2020, connect.2021,
+                        ncol = 3, nrow = 2),
+       height = 2400,
+       width = 2700,
+       dpi = 100,
+       units = "px")
+
+connect.2010.2021 <- difference_plot(data.in = lowland.trend, 
+                                     habitat = "Difference", 
+                                     title = "")
+
+ggsave(filename = "results/figures/support/lowland-forest-connectivity-trend-spatial.png",
+       plot = connect.2010.2021,
+       height = 1200,
+       width = 900,
+       dpi = 100,
+       units = "px")
+
+trend.plot <- trend_plot(data.in = connectivity.results, 
+                         x = "2010", 
+                         y = "2021", 
+                         title = "Lowland Forest Connectivity")
+
+ggsave(filename = "results/figures/support/lowland-forest-connectivity-trend.png",
+       plot = trend.plot,
+       height = 800,
+       width = 800,
+       dpi = 100,
+       units = "px")
+
+##############
+# Grasslands #
+##############
+
+# Append connectivity
+connectivity.results$Connect2010 <- (landscape.connecivity.2010$GrasslandCur / landscape.connecivity.2010$GrasslandRef) * 100
+connectivity.results$Connect2018 <- (landscape.connecivity.2018$GrasslandCur / landscape.connecivity.2018$GrasslandRef) * 100
+connectivity.results$Connect2019 <- (landscape.connecivity.2019$GrasslandCur / landscape.connecivity.2019$GrasslandRef) * 100
+connectivity.results$Connect2020 <- (landscape.connecivity.2020$GrasslandCur / landscape.connecivity.2020$GrasslandRef) * 100
+connectivity.results$Connect2021 <- (landscape.connecivity.2021$GrasslandCur / landscape.connecivity.2021$GrasslandRef) * 100
+
+connect.2010 <- lc_plot(data.in = connectivity.results, 
+                        habitat = "Connect2010", 
+                        title = "Grassland Connectivity 2010")
+
+connect.2018 <- lc_plot(data.in = connectivity.results, 
+                        habitat = "Connect2018", 
+                        title = "Grassland Connectivity 2018")
+
+connect.2019 <- lc_plot(data.in = connectivity.results, 
+                        habitat = "Connect2019", 
+                        title = "Grassland Connectivity 2019")
+
+connect.2020 <- lc_plot(data.in = connectivity.results, 
+                        habitat = "Connect2020", 
+                        title = "Grassland Connectivity 2020")
+
+connect.2021 <- lc_plot(data.in = connectivity.results, 
+                        habitat = "Connect2021", 
+                        title = "Grassland Connectivity 2021")
+
+ggsave(filename = "results/figures/indicator/grassland-connectivity.png",
+       plot = ggarrange(connect.2010, connect.2018,
+                        connect.2019, connect.2020, connect.2021,
+                        ncol = 3, nrow = 2),
+       height = 2400,
+       width = 2700,
+       dpi = 100,
+       units = "px")
+
+connect.2010.2021 <- difference_plot(data.in = grassland.trend, 
+                                     habitat = "Difference", 
+                                     title = "")
+
+ggsave(filename = "results/figures/support/grassland-connectivity-trend-spatial.png",
+       plot = connect.2010.2021,
+       height = 1200,
+       width = 900,
+       dpi = 100,
+       units = "px")
+
+trend.plot <- trend_plot(data.in = connectivity.results, 
+                         x = "2010", 
+                         y = "2021", 
+                         title = "Grassland Connectivity")
+
+ggsave(filename = "results/figures/support/grassland-connectivity-trend.png",
+       plot = trend.plot,
+       height = 800,
+       width = 800,
+       dpi = 100,
+       units = "px")
+
+##############
+# Resistance # 
+##############~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Clear memory
+rm(list=ls())
+gc()
+
+# Load libraries
+library(abmi.themes)
+library(ggplot2)
+library(ggpubr)
+library(MetBrewer)
+library(sf)
+
+# Source scripts
+source("src/visualization_functions.R")
+
+# Load the blank shapefile
+resistance.2021 <- read_sf("data/processed/huc-8/2021/movecost/huc-8-movecost_2021.dbf")
+
+######################
+# Current Resistance #
+######################
+
+resist.grassland <- resistance_plot(data.in = resistance.2021, 
+                                    habitat = "GrCur", 
+                                    legend = "Current \nResistance",
+                                    title = "Grassland Resistance 2021")
+
+resist.upland <- resistance_plot(data.in = resistance.2021, 
+                                    habitat = "UpCur", 
+                                    legend = "Current \nResistance",
+                                    title = "Upland Forest Resistance 2021")
+
+resist.lowland <- resistance_plot(data.in = resistance.2021, 
+                                    habitat = "LowCur", 
+                                    legend = "Current \nResistance",
+                                    title = "Lowland Forest Resistance 2021")
+
+ggsave(filename = "results/figures/support/resistance-current-2021.png",
+       plot = ggarrange(resist.grassland, resist.upland,
+                        resist.lowland,
+                        ncol = 3, nrow = 1),
+       height = 1200,
+       width = 2700,
+       dpi = 100,
+       units = "px")
+
+########################
+# Reference Resistance #
+########################
+
+resist.grassland <- resistance_plot(data.in = resistance.2021, 
+                                    habitat = "GrRef", 
+                                    legend = "Reference \nResistance",
+                                    title = "Grassland Resistance 2021")
+
+resist.upland <- resistance_plot(data.in = resistance.2021, 
+                                 habitat = "UpRef", 
+                                 legend = "Reference \nResistance",
+                                 title = "Upland Forest Resistance 2021")
+
+resist.lowland <- resistance_plot(data.in = resistance.2021, 
+                                  habitat = "LowRef", 
+                                  legend = "Reference \nResistance",
+                                  title = "Lowland Forest Resistance 2021")
+
+ggsave(filename = "results/figures/support/resistance-reference-2021.png",
+       plot = ggarrange(resist.grassland, resist.upland,
+                        resist.lowland,
+                        ncol = 3, nrow = 1),
+       height = 1200,
+       width = 2700,
+       dpi = 100,
+       units = "px")
+
+##################
+# Percent change #
+##################
+
+resistance.2021$Grassland <- ifelse(resistance.2021$GrCur > resistance.2021$GrRef,
+                                    100 * ((resistance.2021$GrCur - resistance.2021$GrRef) / resistance.2021$GrRef),
+                                    -100 * ((resistance.2021$GrRef - resistance.2021$GrCur) / resistance.2021$GrRef))
+
+resistance.2021$Upland <- ifelse(resistance.2021$UpCur > resistance.2021$UpRef,
+                                 100 * ((resistance.2021$UpCur - resistance.2021$UpRef) / resistance.2021$UpRef),
+                                 -100 * ((resistance.2021$UpRef - resistance.2021$UpCur) / resistance.2021$UpRef))
+
+resistance.2021$Lowland <- ifelse(resistance.2021$LowCur > resistance.2021$LowRef,
+                                  100 * ((resistance.2021$LowCur - resistance.2021$LowRef) / resistance.2021$LowRef),
+                                  -100 * ((resistance.2021$LowRef - resistance.2021$LowCur) / resistance.2021$LowRef))
+
+resist.grassland <- resistance_plot(data.in = resistance.2021, 
+                                habitat = "Grassland", 
+                                legend = "Percent Change (%)",
+                                title = "Grassland Resistance 2021")
+
+resist.upland <- resistance_plot(data.in = resistance.2021, 
+                                habitat = "Upland", 
+                                legend = "Percent Change (%)",
+                                title = "Upland Forest Resistance 2021")
+
+resist.lowland <- resistance_plot(data.in = resistance.2021, 
+                                habitat = "Lowland", 
+                                legend = "Percent Change (%)",
+                                title = "Lowland Forest Resistance 2021")
+
+ggsave(filename = "results/figures/support/resistance-change-2021.png",
+       plot = ggarrange(resist.grassland, resist.upland,
+                        resist.lowland,
+                        ncol = 3, nrow = 1),
+       height = 1200,
+       width = 2700,
+       dpi = 100,
+       units = "px")
+
+###################
+# Forest Recovery # 
+###################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+# Clear memory
+rm(list=ls())
+gc()
+
+# Load libraries
+library(abmi.themes)
+library(ggplot2)
+library(MetBrewer)
+
+# Load data
+load("data/lookup/harvest-recovery-curves_80years.Rdata")
+
+# Standardize the data
+harvest.recovery <- data.frame(Stand = c(rep("Deciduous", 81), 
+                                         rep("Coniferous", 81)),
+                               Age = c(recovery.curve$Age, 
+                                       recovery.curve$Age),
+                               Recovery = c(recovery.curve$Deciduous,
+                                            recovery.curve$Coniferous))
+
+# We are removing the 80 year class as looks weird visually. Can simply say "After 80 years, recovery is assumed 100%".
+harvest.recovery <- harvest.recovery[harvest.recovery$Age != 80, ]
+
+recovery.curve <- ggplot(data = harvest.recovery, aes(x = Age, y = Recovery, fill = Stand, col = Stand)) + 
+  geom_point() +
+  scale_color_manual(name = "Stand Type",values = met.brewer(name = "Egypt", n = 2, type = "discrete")) +
+  scale_fill_manual(name = "Stand Type", values = met.brewer(name = "Egypt", n = 2, type = "discrete")) +
+  xlab("Age (Years)") +
+  ylab("Stand Recovery (%)") +
+  ylim(c(0,100)) +
+  xlim(c(0,80)) +
   theme_light() +
-  theme_abmi(font = "Montserrat")
-
-dev.off()
-
-# Spatial visualization
-
-shape.in <- read_sf("data/base/gis/boundaries/HUC_8_EPSG3400.shp")
-shape.in <- merge(shape.in, results.connect, by = "HUC_8")
-
-png(paste0("results/figures/connectivity-HFI2018v7.png"),
-    width = 1800,
-    height = 2400, 
-    res = 300)
-
-ggplot() + 
-  geom_sf(data = shape.in, aes(fill = Connect), show.legend = TRUE) +
-  scale_fill_gradientn(name = paste0("Connectivity (%)"), colors = met.brewer(name = "Hiroshige", n = 100, type = "continuous"), guide = "colourbar") +
-  ggtitle("Landscape Connectivity (2018)") + 
-  theme_light() +
-  theme(axis.title = element_text(size=12),
-        axis.text.x = element_text(size=12),
-        axis.text.y = element_text(size=12),
-        title = element_text(size=12), 
-        legend.title = element_text(size=12),
-        legend.text = element_text(size=12),
-        legend.key.size = unit(0.5, "cm"),
-        axis.line = element_line(colour = "black"),
-        panel.border = element_rect(colour = "black", fill=NA, size=1),
-        legend.position = c(0.19, 0.15)) 
-
-dev.off()
-
-#
-# Resistance
-#
-
-resist.in <- read_sf("data/processed/huc-8/2018/movecost/huc-8-movecost_2018.shp")
+  theme(axis.title = element_text(size=16, face = "bold"),
+        title = element_text(size=16, face = "bold"),
+        axis.text = element_text(size=16),
+        legend.title = element_text(size=16),
+        legend.text = element_text(size=16), 
+        panel.border = element_rect(color = "black",
+                                    fill = NA,
+                                    size = 1),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank())
 
 
-# Need to create a resistance map for each habitat type and reference condition
-habitat <- c("UpCur", "UpRef", "LowCur", "LowRef", "GrCur", "GrRef")
-names(habitat) <- c("Upland Forest Current", "Upland Forest Reference", 
-                    "Lowland Forest Current", "Lowland Forest Reference",
-                    "Grassland Current", "Grassland Reference")
+ggsave(filename = "results/figures/support/forest-recovery-curves.png",
+       plot = recovery.curve,
+       height = 800,
+       width = 1200,
+       dpi = 100,
+       units = "px")
 
-for (i in names(habitat)) {
-  
-  name.id <- as.character(habitat[i])
-  
-  png(paste0("results/figures/", i, " resistancev7.png"),
-      width = 1800,
-      height = 2400, 
-      res = 300)
-    
-  print(ggplot() + 
-    geom_sf(data = resist.in, aes_string(fill = name.id), show.legend = TRUE) +
-    scale_fill_gradientn(name = paste0("Resistance"), colors = rev(met.brewer(name = "Hiroshige", n = 100, type = "continuous")), limits = c(0,10), guide = "colourbar") +
-    ggtitle(i) + 
-    theme_light() +
-    theme(axis.title = element_text(size=12),
-          axis.text.x = element_text(size=12),
-          axis.text.y = element_text(size=12),
-          title = element_text(size=12), 
-          legend.title = element_text(size=12),
-          legend.text = element_text(size=12),
-          legend.key.size = unit(0.5, "cm"),
-          axis.line = element_line(colour = "black"),
-          panel.border = element_rect(colour = "black", fill=NA, size=1),
-          legend.position = c(0.19, 0.15)))
-  
-  dev.off()
-  
-}
-
+rm(list=ls())
+gc()
