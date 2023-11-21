@@ -35,7 +35,7 @@ library(sf)
 source("src/data-cleaning_functions.R")
 
 # Define HUC units and HFI inventories
-HFI <- 2010
+HFI <- 2021
 huc.unit <- 8
 watershed.ids <- read_sf("data/base/gis/boundaries/HUC_8_EPSG3400.shp")
 watershed.ids <- watershed.ids$HUC_8
@@ -99,7 +99,7 @@ start.time <- Sys.time()
 # Clean the landscapes
 parLapply(core.input, 
           as.list(watershed.ids), 
-          fun = function(HUC) tryCatch(landscape_cleaning(landcover.layer = "D:/backfill/Version7.0/gdb_veghf_reference_condition_2010.gdb/veghf_2010",
+          fun = function(HUC) tryCatch(landscape_cleaning(landcover.layer = paste0("D:/backfill/Version7.0/gdb_veghf_reference_condition_", HFI, ".gdb/veghf_", HFI, ""),
                                                         boundary.layer = "data/base/gis/boundaries/HUC_8_EPSG3400.shp",
                                                         wildlife.layer = "data/base/wildlife-crossings/wildlife_crossings_100m.shp",
                                                         HUC.scale = huc.unit,
