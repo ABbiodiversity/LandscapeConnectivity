@@ -51,12 +51,33 @@ landscape.connecivity.2021 <- landscape.connecivity.2021[connectivity.results$HU
 # Select attributes
 connectivity.results <- connectivity.results[, c("HUC_8", "HUC_6", "HUC_4", "HUC_2")]
 
-# Add results
-connectivity.results$Con2010 <- landscape.connecivity.2010$Connect
-connectivity.results$Con2018 <- landscape.connecivity.2018$Connect
-connectivity.results$Con2019 <- landscape.connecivity.2019$Connect
-connectivity.results$Con2020 <- landscape.connecivity.2020$Connect
-connectivity.results$Con2021 <- landscape.connecivity.2021$Connect
+# Add total connectivity results
+connectivity.results$LC2010 <- landscape.connecivity.2010$Connect
+connectivity.results$LC2018 <- landscape.connecivity.2018$Connect
+connectivity.results$LC2019 <- landscape.connecivity.2019$Connect
+connectivity.results$LC2020 <- landscape.connecivity.2020$Connect
+connectivity.results$LC2021 <- landscape.connecivity.2021$Connect
+
+# Add the Upland forest results
+connectivity.results$Upland2010 <- (landscape.connecivity.2010$UplandForestCur / landscape.connecivity.2010$UplandForestRef) * 100
+connectivity.results$Upland2018 <- (landscape.connecivity.2018$UplandForestCur / landscape.connecivity.2018$UplandForestRef) * 100
+connectivity.results$Upland2019 <- (landscape.connecivity.2019$UplandForestCur / landscape.connecivity.2019$UplandForestRef) * 100
+connectivity.results$Upland2020 <- (landscape.connecivity.2020$UplandForestCur / landscape.connecivity.2020$UplandForestRef) * 100
+connectivity.results$Upland2021 <- (landscape.connecivity.2021$UplandForestCur / landscape.connecivity.2021$UplandForestRef) * 100
+
+# Add the lowland forest results
+connectivity.results$Low2010 <- (landscape.connecivity.2010$LowlandForestCur / landscape.connecivity.2010$LowlandForestRef) * 100
+connectivity.results$Low2018 <- (landscape.connecivity.2018$LowlandForestCur / landscape.connecivity.2018$LowlandForestRef) * 100
+connectivity.results$Low2019 <- (landscape.connecivity.2019$LowlandForestCur / landscape.connecivity.2019$LowlandForestRef) * 100
+connectivity.results$Low2020 <- (landscape.connecivity.2020$LowlandForestCur / landscape.connecivity.2020$LowlandForestRef) * 100
+connectivity.results$Low2021 <- (landscape.connecivity.2021$LowlandForestCur / landscape.connecivity.2021$LowlandForestRef) * 100
+
+# Add the grassland results
+connectivity.results$Grass2010 <- (landscape.connecivity.2010$GrasslandCur / landscape.connecivity.2010$GrasslandRef) * 100
+connectivity.results$Grass2018 <- (landscape.connecivity.2018$GrasslandCur / landscape.connecivity.2018$GrasslandRef) * 100
+connectivity.results$Grass2019 <- (landscape.connecivity.2019$GrasslandCur / landscape.connecivity.2019$GrasslandRef) * 100
+connectivity.results$Grass2020 <- (landscape.connecivity.2020$GrasslandCur / landscape.connecivity.2020$GrasslandRef) * 100
+connectivity.results$Grass2021 <- (landscape.connecivity.2021$GrasslandCur / landscape.connecivity.2021$GrasslandRef) * 100
 
 # Save
 write_sf(connectivity.results, dsn = "results/gis/landscape_connectivity_2010_2021.shp")
