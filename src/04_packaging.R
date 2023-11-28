@@ -1,7 +1,7 @@
 #
 # Title: Packaging Results
 # Created: November 21st, 2023
-# Last Updated: November 21st, 2023
+# Last Updated: November 28th, 2023
 # Author: Brandon Allen
 # Objectives: Package results for landscape connectivity
 # Keywords: Notes, Packaging
@@ -78,6 +78,12 @@ connectivity.results$Grass2018 <- (landscape.connecivity.2018$GrasslandCur / lan
 connectivity.results$Grass2019 <- (landscape.connecivity.2019$GrasslandCur / landscape.connecivity.2019$GrasslandRef) * 100
 connectivity.results$Grass2020 <- (landscape.connecivity.2020$GrasslandCur / landscape.connecivity.2020$GrasslandRef) * 100
 connectivity.results$Grass2021 <- (landscape.connecivity.2021$GrasslandCur / landscape.connecivity.2021$GrasslandRef) * 100
+
+for(column.id in colnames(connectivity.results)[6:22]) {
+  
+  connectivity.results[, column.id] <- ifelse(as.data.frame(connectivity.results)[, column.id] > 100, 100, as.data.frame(connectivity.results)[, column.id])
+  
+}
 
 # Save
 write_sf(connectivity.results, dsn = "results/gis/landscape_connectivity_2010_2021.shp")
