@@ -79,9 +79,17 @@ connectivity.results$Grass2019 <- (landscape.connecivity.2019$GrasslandCur / lan
 connectivity.results$Grass2020 <- (landscape.connecivity.2020$GrasslandCur / landscape.connecivity.2020$GrasslandRef) * 100
 connectivity.results$Grass2021 <- (landscape.connecivity.2021$GrasslandCur / landscape.connecivity.2021$GrasslandRef) * 100
 
-for(column.id in colnames(connectivity.results)[6:22]) {
+# Truncate values to 100 percent as a few have rounding errors
+for(column.id in colnames(connectivity.results)[6:25]) {
   
-  connectivity.results[, column.id] <- ifelse(as.data.frame(connectivity.results)[, column.id] > 100, 100, as.data.frame(connectivity.results)[, column.id])
+  connectivity.results[, column.id] <- ifelse(as.data.frame(connectivity.results)[, column.id] > 100, 
+                                              100, as.data.frame(connectivity.results)[, column.id])
+  
+}
+
+for(column.id in colnames(connectivity.results)[6:25]) {
+  
+  connectivity.results[is.na(as.data.frame(connectivity.results)[, column.id]), column.id] <- -9999
   
 }
 
