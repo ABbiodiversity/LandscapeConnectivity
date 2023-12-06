@@ -1536,7 +1536,7 @@ eca.patch <- ggplot(data = simulation.results, aes(x = PatchSize, y = ECA, group
                                "#79987B", "#4C838D",
                                "#014A61", "#122451")) +
   xlab("Minimum Patch Size (km2)") +
-  ylab("Equivalent Connected Area") +
+  ylab("Equivalent Connected Area (km2)") +
   theme_light() +
   theme(axis.line = element_line(colour = "black"),
         legend.text = element_text(size = 10),
