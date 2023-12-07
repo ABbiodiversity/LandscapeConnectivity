@@ -1,7 +1,7 @@
 #
 # Title: Visualization of landscape connectivity
 # Created: October 11th, 2022
-# Last Updated: November 20th, 2023
+# Last Updated: December 7th, 2023
 # Author: Brandon Allen
 # Objectives: Visualize the landscape connectivity indicator.
 # Keywords: Notes, Connectivity, Resistance, Forest recovery
@@ -75,6 +75,26 @@ total.trend <- data.frame(HUC_8 = landscape.connecivity.2010$HUC_8,
                           LC_2010 = landscape.connecivity.2010$Connect,
                           LC_2021 = landscape.connecivity.2021$Connect,
                           Difference = landscape.connecivity.2021$Connect - landscape.connecivity.2010$Connect)
+
+# Calculate the dominant habitat type
+habitat.area <- data.frame(HUC_8 = landscape.connecivity.2021$HUC_8,
+                           Upland = landscape.connecivity.2021$UplandForestArea,
+                           Lowland = landscape.connecivity.2021$LowlandForestArea,
+                           Grassland = landscape.connecivity.2021$GrasslandArea)
+habitat.area[is.na(habitat.area)] <- 0
+
+habitat.area$Dominant <- NA
+
+for(x in 1:nrow(habitat.area)) {
+  
+  habitat.area$Dominant[x] <- colnames(habitat.area[,c(2:4)])[habitat.area[x, c(2:4)] == max(habitat.area[x, c(2:4)])]
+  
+}
+
+# Define NA for watersheds where the habitat type isn't dominant
+upland.trend[upland.trend$HUC_8 %in% habitat.area[habitat.area$Dominant != "Upland", "HUC_8"], "Difference"] <- NA
+lowland.trend[lowland.trend$HUC_8 %in% habitat.area[habitat.area$Dominant != "Lowland", "HUC_8"], "Difference"] <- NA
+grassland.trend[grassland.trend$HUC_8 %in% habitat.area[habitat.area$Dominant != "Grassland", "HUC_8"], "Difference"] <- NA
 
 # Append the differences
 upland.trend <- merge(connectivity.results, upland.trend, by = "HUC_8")
