@@ -381,17 +381,17 @@ resistance.2021 <- read_sf("data/processed/huc-8/2021/movecost/huc-8-movecost_20
 
 resist.grassland <- resistance_plot(data.in = resistance.2021, 
                                     habitat = "GrCur", 
-                                    legend = "Current \nResistance",
+                                    legend = "Resistance",
                                     title = "Grassland Resistance 2021")
 
 resist.upland <- resistance_plot(data.in = resistance.2021, 
                                     habitat = "UpCur", 
-                                    legend = "Current \nResistance",
+                                    legend = "Resistance",
                                     title = "Upland Forest Resistance 2021")
 
 resist.lowland <- resistance_plot(data.in = resistance.2021, 
                                     habitat = "LowCur", 
-                                    legend = "Current \nResistance",
+                                    legend = "Resistance",
                                     title = "Lowland Forest Resistance 2021")
 
 ggsave(filename = "results/figures/support/resistance-current-2021.png",
@@ -409,18 +409,18 @@ ggsave(filename = "results/figures/support/resistance-current-2021.png",
 
 resist.grassland <- resistance_plot(data.in = resistance.2021, 
                                     habitat = "GrRef", 
-                                    legend = "Reference \nResistance",
-                                    title = "Grassland Resistance 2021")
+                                    legend = "Resistance",
+                                    title = "Grassland Resistance Reference")
 
 resist.upland <- resistance_plot(data.in = resistance.2021, 
                                  habitat = "UpRef", 
-                                 legend = "Reference \nResistance",
-                                 title = "Upland Forest Resistance 2021")
+                                 legend = "Resistance",
+                                 title = "Upland Forest Resistance Reference")
 
 resist.lowland <- resistance_plot(data.in = resistance.2021, 
                                   habitat = "LowRef", 
-                                  legend = "Reference \nResistance",
-                                  title = "Lowland Forest Resistance 2021")
+                                  legend = "Resistance",
+                                  title = "Lowland Forest Resistance Reference")
 
 ggsave(filename = "results/figures/support/resistance-reference-2021.png",
        plot = ggarrange(resist.grassland, resist.upland,
@@ -450,17 +450,17 @@ resistance.2021$Lowland <- ifelse(resistance.2021$LowCur > resistance.2021$LowRe
 resist.grassland <- resistance_plot(data.in = resistance.2021, 
                                 habitat = "Grassland", 
                                 legend = "Percent Change (%)",
-                                title = "Grassland Resistance 2021")
+                                title = "Grassland Resistance")
 
 resist.upland <- resistance_plot(data.in = resistance.2021, 
                                 habitat = "Upland", 
                                 legend = "Percent Change (%)",
-                                title = "Upland Forest Resistance 2021")
+                                title = "Upland Forest Resistance")
 
 resist.lowland <- resistance_plot(data.in = resistance.2021, 
                                 habitat = "Lowland", 
                                 legend = "Percent Change (%)",
-                                title = "Lowland Forest Resistance 2021")
+                                title = "Lowland Forest Resistance")
 
 ggsave(filename = "results/figures/support/resistance-change-2021.png",
        plot = ggarrange(resist.grassland, resist.upland,
