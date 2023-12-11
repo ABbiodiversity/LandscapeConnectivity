@@ -26,11 +26,11 @@ landscape_cleaning <- function(landcover.layer, boundary.layer, wildlife.layer, 
   ##########################
   
   # Create geodatabase
-  arcpy$CreateFileGDB_management(out_folder_path = paste0(getwd(), "/data/processed/huc-8/", HFI.year, "/gis/"), 
+  arcpy$CreateFileGDB_management(out_folder_path = paste0(getwd(), "/data/processed/huc-", HUC.scale, "/", HFI.year, "/gis/"), 
                                  out_name = paste0(HUC.id, ".gdb"))
   
   # Define workspace
-  arcpy$env$workspace <- paste0(getwd(), "/data/processed/huc-8/", HFI.year, "/gis/", HUC.id, ".gdb")
+  arcpy$env$workspace <- paste0(getwd(), "/data/processed/huc-", HUC.scale, "/", HFI.year, "/gis/", HUC.id, ".gdb")
   
   ############################
   # Select Analysis boundary #
