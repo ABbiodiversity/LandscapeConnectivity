@@ -1,7 +1,7 @@
 #
 # Title: Visualization of landscape connectivity
 # Created: October 11th, 2022
-# Last Updated: December 7th, 2023
+# Last Updated: April 24th, 2024
 # Author: Brandon Allen
 # Objectives: Visualize the landscape connectivity indicator.
 # Keywords: Notes, Connectivity, Resistance, Forest recovery
@@ -55,46 +55,38 @@ landscape.connecivity.2019 <- landscape.connecivity.2019[connectivity.results$HU
 landscape.connecivity.2020 <- landscape.connecivity.2020[connectivity.results$HUC_8, ]
 landscape.connecivity.2021 <- landscape.connecivity.2021[connectivity.results$HUC_8, ]
 
+# Convert NA to 0
+landscape.connecivity.2010[is.na(landscape.connecivity.2010)] <- 0
+
 # Create the trend results
 upland.trend <- data.frame(HUC_8 = landscape.connecivity.2010$HUC_8,
                            LC_2010 = (landscape.connecivity.2010$UplandForestCur / landscape.connecivity.2010$UplandForestRef) * 100,
-                                LC_2021 = (landscape.connecivity.2021$UplandForestCur / landscape.connecivity.2021$UplandForestRef) * 100)
+                                LC_2021 = (landscape.connecivity.2021$UplandForestCur / landscape.connecivity.2021$UplandForestRef) * 100,
+                           Area = (landscape.connecivity.2010$UplandForestArea / (landscape.connecivity.2010$UplandForestArea +
+                                                                                    landscape.connecivity.2010$LowlandForestArea +
+                                                                                    landscape.connecivity.2010$GrasslandArea)) * 100)
 upland.trend$Difference <- upland.trend$LC_2021 - upland.trend$LC_2010
 
 lowland.trend <- data.frame(HUC_8 = landscape.connecivity.2010$HUC_8,
                             LC_2010 = (landscape.connecivity.2010$LowlandForestCur / landscape.connecivity.2010$LowlandForestRef) * 100,
-                            LC_2021 = (landscape.connecivity.2021$LowlandForestCur / landscape.connecivity.2021$LowlandForestRef) * 100)
+                            LC_2021 = (landscape.connecivity.2021$LowlandForestCur / landscape.connecivity.2021$LowlandForestRef) * 100,
+                            Area = (landscape.connecivity.2010$LowlandForestArea / (landscape.connecivity.2010$UplandForestArea +
+                                                                                     landscape.connecivity.2010$LowlandForestArea +
+                                                                                     landscape.connecivity.2010$GrasslandArea)) * 100)
 lowland.trend$Difference <- lowland.trend$LC_2021 - lowland.trend$LC_2010
 
 grassland.trend <- data.frame(HUC_8 = landscape.connecivity.2010$HUC_8,
                               LC_2010 = (landscape.connecivity.2010$GrasslandCur / landscape.connecivity.2010$GrasslandRef) * 100,
-                              LC_2021 = (landscape.connecivity.2021$GrasslandCur / landscape.connecivity.2021$GrasslandRef) * 100)
+                              LC_2021 = (landscape.connecivity.2021$GrasslandCur / landscape.connecivity.2021$GrasslandRef) * 100,
+                              Area = (landscape.connecivity.2010$GrasslandArea / (landscape.connecivity.2010$UplandForestArea +
+                                                                                       landscape.connecivity.2010$LowlandForestArea +
+                                                                                       landscape.connecivity.2010$GrasslandArea)) * 100)
 grassland.trend$Difference <- grassland.trend$LC_2021 - grassland.trend$LC_2010
 
 total.trend <- data.frame(HUC_8 = landscape.connecivity.2010$HUC_8,
                           LC_2010 = landscape.connecivity.2010$Connect,
                           LC_2021 = landscape.connecivity.2021$Connect,
                           Difference = landscape.connecivity.2021$Connect - landscape.connecivity.2010$Connect)
-
-# Calculate the dominant habitat type
-habitat.area <- data.frame(HUC_8 = landscape.connecivity.2021$HUC_8,
-                           Upland = landscape.connecivity.2021$UplandForestArea,
-                           Lowland = landscape.connecivity.2021$LowlandForestArea,
-                           Grassland = landscape.connecivity.2021$GrasslandArea)
-habitat.area[is.na(habitat.area)] <- 0
-
-habitat.area$Dominant <- NA
-
-for(x in 1:nrow(habitat.area)) {
-  
-  habitat.area$Dominant[x] <- colnames(habitat.area[,c(2:4)])[habitat.area[x, c(2:4)] == max(habitat.area[x, c(2:4)])]
-  
-}
-
-# Define NA for watersheds where the habitat type isn't dominant
-upland.trend[upland.trend$HUC_8 %in% habitat.area[habitat.area$Dominant != "Upland", "HUC_8"], "Difference"] <- NA
-lowland.trend[lowland.trend$HUC_8 %in% habitat.area[habitat.area$Dominant != "Lowland", "HUC_8"], "Difference"] <- NA
-grassland.trend[grassland.trend$HUC_8 %in% habitat.area[habitat.area$Dominant != "Grassland", "HUC_8"], "Difference"] <- NA
 
 # Append the differences
 upland.trend <- merge(connectivity.results, upland.trend, by = "HUC_8")
@@ -175,6 +167,9 @@ connectivity.results$Connect2018 <- (landscape.connecivity.2018$UplandForestCur 
 connectivity.results$Connect2019 <- (landscape.connecivity.2019$UplandForestCur / landscape.connecivity.2019$UplandForestRef) * 100
 connectivity.results$Connect2020 <- (landscape.connecivity.2020$UplandForestCur / landscape.connecivity.2020$UplandForestRef) * 100
 connectivity.results$Connect2021 <- (landscape.connecivity.2021$UplandForestCur / landscape.connecivity.2021$UplandForestRef) * 100
+connectivity.results$Area <- (landscape.connecivity.2010$UplandForestArea / (landscape.connecivity.2010$UplandForestArea +
+                                                                                      landscape.connecivity.2010$LowlandForestArea +
+                                                                                      landscape.connecivity.2010$GrasslandArea)) * 100
 
 connect.2010 <- lc_plot(data.in = connectivity.results, 
                         habitat = "Connect2010", 
@@ -209,10 +204,15 @@ connect.2010.2021 <- difference_plot(data.in = upland.trend,
                                      habitat = "Difference", 
                                      title = "")
 
+connect.area <- area_plot(data.in = upland.trend, 
+                                     habitat = "Area", 
+                                     title = "")
+
 ggsave(filename = "results/figures/support/upland-forest-connectivity-trend-spatial.png",
-       plot = connect.2010.2021,
+       plot = ggarrange(connect.2010.2021, 
+                        connect.area, ncol = 2),
        height = 1200,
-       width = 900,
+       width = 1800,
        dpi = 100,
        units = "px")
 
@@ -238,6 +238,9 @@ connectivity.results$Connect2018 <- (landscape.connecivity.2018$LowlandForestCur
 connectivity.results$Connect2019 <- (landscape.connecivity.2019$LowlandForestCur / landscape.connecivity.2019$LowlandForestRef) * 100
 connectivity.results$Connect2020 <- (landscape.connecivity.2020$LowlandForestCur / landscape.connecivity.2020$LowlandForestRef) * 100
 connectivity.results$Connect2021 <- (landscape.connecivity.2021$LowlandForestCur / landscape.connecivity.2021$LowlandForestRef) * 100
+connectivity.results$Area <- (landscape.connecivity.2010$LowlandForestArea / (landscape.connecivity.2010$UplandForestArea +
+                                                                               landscape.connecivity.2010$LowlandForestArea +
+                                                                               landscape.connecivity.2010$GrasslandArea)) * 100
 
 connect.2010 <- lc_plot(data.in = connectivity.results, 
                         habitat = "Connect2010", 
@@ -272,10 +275,15 @@ connect.2010.2021 <- difference_plot(data.in = lowland.trend,
                                      habitat = "Difference", 
                                      title = "")
 
+connect.area <- area_plot(data.in = lowland.trend, 
+                          habitat = "Area", 
+                          title = "")
+
 ggsave(filename = "results/figures/support/lowland-forest-connectivity-trend-spatial.png",
-       plot = connect.2010.2021,
+       plot = ggarrange(connect.2010.2021, 
+                        connect.area, ncol = 2),
        height = 1200,
-       width = 900,
+       width = 1800,
        dpi = 100,
        units = "px")
 
@@ -301,26 +309,30 @@ connectivity.results$Connect2018 <- (landscape.connecivity.2018$GrasslandCur / l
 connectivity.results$Connect2019 <- (landscape.connecivity.2019$GrasslandCur / landscape.connecivity.2019$GrasslandRef) * 100
 connectivity.results$Connect2020 <- (landscape.connecivity.2020$GrasslandCur / landscape.connecivity.2020$GrasslandRef) * 100
 connectivity.results$Connect2021 <- (landscape.connecivity.2021$GrasslandCur / landscape.connecivity.2021$GrasslandRef) * 100
+connectivity.results$Area <- (landscape.connecivity.2010$GrasslandArea / (landscape.connecivity.2010$UplandForestArea +
+                                                                               landscape.connecivity.2010$LowlandForestArea +
+                                                                               landscape.connecivity.2010$GrasslandArea)) * 100
+
 
 connect.2010 <- lc_plot(data.in = connectivity.results, 
                         habitat = "Connect2010", 
-                        title = "Grassland Connectivity 2010")
+                        title = "Grass-Shrub Connectivity 2010")
 
 connect.2018 <- lc_plot(data.in = connectivity.results, 
                         habitat = "Connect2018", 
-                        title = "Grassland Connectivity 2018")
+                        title = "Grass-Shrub Connectivity 2018")
 
 connect.2019 <- lc_plot(data.in = connectivity.results, 
                         habitat = "Connect2019", 
-                        title = "Grassland Connectivity 2019")
+                        title = "Grass-Shrub Connectivity 2019")
 
 connect.2020 <- lc_plot(data.in = connectivity.results, 
                         habitat = "Connect2020", 
-                        title = "Grassland Connectivity 2020")
+                        title = "Grass-Shrub Connectivity 2020")
 
 connect.2021 <- lc_plot(data.in = connectivity.results, 
                         habitat = "Connect2021", 
-                        title = "Grassland Connectivity 2021")
+                        title = "Grass-Shrub Connectivity 2021")
 
 ggsave(filename = "results/figures/indicator/grassland-connectivity.png",
        plot = ggarrange(connect.2010, connect.2018,
@@ -335,17 +347,22 @@ connect.2010.2021 <- difference_plot(data.in = grassland.trend,
                                      habitat = "Difference", 
                                      title = "")
 
+connect.area <- area_plot(data.in = grassland.trend, 
+                          habitat = "Area", 
+                          title = "")
+
 ggsave(filename = "results/figures/support/grassland-connectivity-trend-spatial.png",
-       plot = connect.2010.2021,
+       plot = ggarrange(connect.2010.2021, 
+                        connect.area, ncol = 2),
        height = 1200,
-       width = 900,
+       width = 1800,
        dpi = 100,
        units = "px")
 
 trend.plot <- trend_plot(data.in = connectivity.results, 
                          x = "2010", 
                          y = "2021", 
-                         title = "Grassland Connectivity")
+                         title = "Grass-Shrub Connectivity")
 
 ggsave(filename = "results/figures/support/grassland-connectivity-trend.png",
        plot = trend.plot,
