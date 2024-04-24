@@ -1,13 +1,11 @@
 #
 # Title: Landscape connectivity index
 # Created: Sept 14th, 2020
-# Last Updated: October 13th, 2023
+# Last Updated: March 1st, 2024
 # Author: Brandon Allen
 # Objectives: Functions required to calculate landscape connectivity
-# Keywords: Data preparation, Landscape Connectivity, Network Visualization
+# Keywords: Data preparation, Landscape Connectivity, Threshold simulation,  Network Visualization
 #
-
-# NOTE: NEED TO MAKE SURE THAT HARVEST AREAS OLDER THAN 80 ARE CLASSIFIED AS NATIVE
 
 ####################
 # Data preparation #
@@ -318,6 +316,151 @@ landscape_connectivity <- function(status, native.type, watershed.costs, dispers
     return(results)
     
   }
+  
+}
+
+########################
+# Threshold simulation # 
+########################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+threshold_simulation <- function(status, native.type, dispersal.threshold, simulation, HUC.scale, HUC.id, HFI.year, arcpy) {
+  
+  # Define the geodatabase location
+  arcpy$env$workspace <- paste0(getwd(), "/data/processed/huc-", HUC.scale, 
+                                "/", HFI, "/gis/", HUC.id, ".gdb")
+  
+  # Create matrix for storing the results
+  results <- as.data.frame(matrix(data = NA, nrow = 1000 * length(simulation), ncol = 6, 
+                                  dimnames = list(1:(1000 * length(simulation)), c("HUC_8", "Threshold", 
+                                                                                 "Habitat_Area", "ECA", 
+                                                                                 "Native_Cover", "Watershed_Area"))))
+  
+  # Add simulations
+  results$Threshold <- rep(simulation, 1000)
+  
+  results$HUC_8 <- HUC.id
+  
+  # Calculate total area of the focal boundary
+  total.area <- read_sf(paste0("data/processed/huc-", HUC.scale, "/", 
+                               HFI, "/gis/", HUC.id, ".gdb"),
+                        layer = "boundary")
+  total.area <- round(total.area$TotalArea / 1000000, 3) # convert to km2
+  
+  # Check if there is a distance matrix for that habitat type. If not, return empty results
+  if(!arcpy$Exists(paste0(native.type, "_", status, "_distmatrix"))) {
+    
+    results[, c("HUC_8", "Threshold", 
+                "Habitat_Area", "ECA", 
+                "Native_Cover", "Watershed_Area")] <- c(HUC.id, NA, NA, NA, NA, total.area)
+    return(results)
+    
+  }
+  
+  # Load the distance matrix and native polygons into memory
+  patch.dist <- read_sf(dsn = paste0("data/processed/huc-", HUC.scale, 
+                                     "/", HFI.year, "/gis/", HUC.id, ".gdb"),
+                        layer = paste0(native.type, "_", status, "_distmatrix"))
+  
+  native.patches <- read_sf(dsn = paste0("data/processed/huc-", HUC.scale, 
+                                         "/", HFI.year, "/gis/", HUC.id, ".gdb"),
+                            layer = paste0(native.type, "_", status, "_viable"))
+  native.patches$TotalAreakm <- native.patches$TotalArea / 1000000 # Convert to km2
+  
+  # If there are fewer than 2 native patches, set to NA
+  if(nrow(native.patches) < 2) {
+    
+    results[, c("HUC_8", "Threshold", 
+                "Habitat_Area", "ECA", 
+                "Native_Cover", "Watershed_Area")] <- c(HUC.id, NA, NA, NA, NA, total.area)
+    return(results)
+    
+  }
+  
+  # There are going to be patches that are not connected to any other patch. 
+  # Add them to the patch distance file. NEAR_DIST will be given a value of 0
+  patch.list <- 1:nrow(native.patches)
+  isolated.patched <- patch.list[!(patch.list %in% unique(c(patch.dist$IN_FID, 
+                                                            patch.dist$NEAR_FID)))]
+  
+  # By saving the column names, we catch instances where there are no patches that are within the specified distance to each other
+  column.names <- colnames(patch.dist)
+  
+  for(isolated.id in isolated.patched) {
+    
+    patch.dist <- rbind(patch.dist, c(isolated.id, isolated.id, 0, 1))
+    
+  }
+  
+  colnames(patch.dist) <- column.names
+  
+  # Calculate weighted distances
+  patch.dist$Weight <- exp(dispersal.threshold * patch.dist$NEAR_DIST)
+  
+  # Convert weights to the log scale and inverse (*-1) so the paths function is correct
+  patch.dist$Log <- log(patch.dist$Weight) * -1
+  
+  # For each of the landscape simulations, filter out the appropriate polygons
+  patch.dist.og <- patch.dist
+  native.patches.og <- native.patches
+  
+  # Define the total amount of valid native cover
+  native.cover <- sum(native.patches.og$TotalAreakm)
+  
+  for (simulation.id in rownames(results)) {
+    
+    #################################
+    # Calculate simulated landscape #
+    #################################
+    
+    simulation.value <- results[simulation.id, "Threshold"]
+    
+    valid.patches <- sample(rownames(native.patches), size = nrow(native.patches) * simulation.value, replace = FALSE)
+    
+    # For all patches not identified as valid, set dispersal probability to 0 (i.e., INF)
+    patch.dist <- patch.dist.og
+    patch.dist[!(patch.dist$IN_FID %in% valid.patches & patch.dist$NEAR_FID %in% valid.patches), "Log"] <- Inf
+    
+    # For all patches not identified as valid, set patch are to 0
+    native.patches <- native.patches.og
+    native.patches[!(rownames(native.patches) %in% valid.patches), "TotalAreakm"] <- 0
+    
+    ##########################
+    # Calculate Connectivity #
+    ##########################
+    
+    # Create graph, make sure to add vertice flag
+    landscape.matrix <- graph_from_data_frame(d = patch.dist[, 1:2], 
+                                              vertices = rownames(native.patches))
+    E(landscape.matrix)$weight <- patch.dist$Log # Add weights
+    
+    ##################
+    # Matrix Version #
+    ##################
+    
+    if(estimate.memory(dat = c(nrow(native.patches), nrow(native.patches)), unit = "gb") < 10) {
+      
+      # Create habitat matrix with the adjusted areas
+      habitat.matrix <- outer(native.patches$TotalAreakm, native.patches$TotalAreakm, FUN = "*")
+      
+      # Using the network with predefined weights, calculate the shortest path between all patches
+      # Assumes that the distances between patches are probabilities converted to the log scale.
+      dist.matrix <- distances(graph = landscape.matrix) 
+      dist.matrix <- exp(dist.matrix * -1) # Convert back to probability
+      
+      matrix.sum <- rowSums(habitat.matrix * dist.matrix)
+      
+      results[simulation.id, c("Habitat_Area", "ECA", 
+                               "Native_Cover", "Watershed_Area")] <- c(sum(native.patches$TotalAreakm),
+                                                                       sqrt(sum(matrix.sum)), 
+                                                                       native.cover,
+                                                                       total.area)
+ 
+    }
+    
+    
+  }
+  
+    return(results)
   
 }
 
