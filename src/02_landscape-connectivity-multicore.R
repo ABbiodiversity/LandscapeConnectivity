@@ -156,6 +156,7 @@ results.current[["UplandForest"]] <- parLapply(core.input,
 )
 
 connect.time <- Sys.time() - start.time
+
 #############
 # Reference #
 #############
