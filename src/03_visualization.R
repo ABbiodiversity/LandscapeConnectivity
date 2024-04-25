@@ -93,6 +93,11 @@ lowland.trend <- merge(connectivity.results, lowland.trend, by = "HUC_8")
 grassland.trend <- merge(connectivity.results, grassland.trend, by = "HUC_8")
 total.trend <- merge(connectivity.results, total.trend, by = "HUC_8")
 
+# If areas are 0 for the three habitat types, fix to NA
+upland.trend$Area[upland.trend$Area == 0] <- NA
+lowland.trend$Area[lowland.trend$Area == 0] <- NA
+grassland.trend$Area[grassland.trend$Area == 0] <- NA
+
 #########
 # Total #
 #########
@@ -204,8 +209,8 @@ connect.2010.2021 <- difference_plot(data.in = upland.trend,
                                      title = "")
 
 connect.area <- area_plot(data.in = upland.trend, 
-                                     habitat = "Area", 
-                                     title = "")
+                          habitat = "Area", 
+                          title = "")
 
 ggsave(filename = "results/figures/support/upland-forest-connectivity-trend-spatial.png",
        plot = ggarrange(connect.2010.2021, 
