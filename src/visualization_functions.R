@@ -16,7 +16,10 @@ lc_plot <- function(data.in, habitat, title) {
         
         ggplot() + 
                 geom_sf(data = data.in, aes_string(fill = habitat), show.legend = TRUE) +
-                scale_fill_gradientn(name = paste0("Landscape \nConnectivity (%)"), colors = met.brewer(name = "Hiroshige", n = 100, type = "continuous"), guide = "colourbar") +
+                scale_fill_gradientn(name = paste0("Landscape \nConnectivity (%)"), 
+                                     colors = met.brewer(name = "Hiroshige", n = 100, 
+                                                         type = "continuous"), 
+                                     guide = "colourbar") +
                 ggtitle(title) + 
                 theme_light() +
                 theme(axis.title = element_text(size=14),
@@ -38,15 +41,30 @@ lc_plot <- function(data.in, habitat, title) {
 
 difference_plot <- function(data.in, habitat, title) {
         
-        # Define the max value so everything is center properly
-        max.value <- max(abs(as.numeric(as.data.frame(data.in)[, habitat])), na.rm = TRUE)
+        # Create the default palette
+        centered.colors <- met.brewer(name = "Hiroshige", 
+                                      n = 10, 
+                                      type = "continuous")
         
+        # Define the min and maximum values
+        max.value <- max(as.numeric(as.data.frame(data.in)[, habitat]), na.rm = TRUE)
+        min.value <- min(as.numeric(as.data.frame(data.in)[, habitat]), na.rm = TRUE)
+        
+        above.0 <- colorRampPalette(centered.colors[6:10])(max.value)
+        below.0 <- colorRampPalette(centered.colors[1:5])(min.value * -1)
+        
+        # Create the final centered palette
+        centered.colors <- c(below.0, 
+                             "#FFFFFF", 
+                             above.0)
+
+        # Visualize the plot
         ggplot() + 
                 geom_sf(data = data.in, aes_string(fill = habitat), show.legend = TRUE) +
                 scale_fill_gradientn(name = paste0("Percent Change (%)"), 
-                                     colors = met.brewer(name = "Hiroshige", n = 100, type = "continuous"), 
+                                     colors = centered.colors, 
                                      guide = "colourbar", 
-                                     limits = c(-1 * max.value, max.value)) +
+                                     limits = c(min.value, max.value)) +
                 ggtitle(title) + 
                 theme_light() +
                 theme(axis.title = element_text(size=14),
