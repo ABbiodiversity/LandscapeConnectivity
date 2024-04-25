@@ -22,7 +22,6 @@ rm(list=ls())
 gc()
 
 # Load libraries
-library(abmi.themes)
 library(ggplot2)
 library(ggpubr)
 library(MetBrewer)
@@ -380,7 +379,6 @@ rm(list=ls())
 gc()
 
 # Load libraries
-library(abmi.themes)
 library(ggplot2)
 library(ggpubr)
 library(MetBrewer)
@@ -399,7 +397,7 @@ resistance.2021 <- read_sf("data/processed/huc-8/2021/movecost/huc-8-movecost_20
 resist.grassland <- resistance_plot(data.in = resistance.2021, 
                                     habitat = "GrCur", 
                                     legend = "Resistance",
-                                    title = "Grassland Resistance 2021")
+                                    title = "Grass-Shrub Resistance 2021")
 
 resist.upland <- resistance_plot(data.in = resistance.2021, 
                                     habitat = "UpCur", 
@@ -427,7 +425,7 @@ ggsave(filename = "results/figures/support/resistance-current-2021.png",
 resist.grassland <- resistance_plot(data.in = resistance.2021, 
                                     habitat = "GrRef", 
                                     legend = "Resistance",
-                                    title = "Grassland Resistance Reference")
+                                    title = "Grass-Shrub Resistance Reference")
 
 resist.upland <- resistance_plot(data.in = resistance.2021, 
                                  habitat = "UpRef", 
@@ -467,7 +465,7 @@ resistance.2021$Lowland <- ifelse(resistance.2021$LowCur > resistance.2021$LowRe
 resist.grassland <- resistance_plot(data.in = resistance.2021, 
                                 habitat = "Grassland", 
                                 legend = "Percent Change (%)",
-                                title = "Grassland Resistance")
+                                title = "Grass-Shrub Resistance")
 
 resist.upland <- resistance_plot(data.in = resistance.2021, 
                                 habitat = "Upland", 
@@ -497,7 +495,6 @@ rm(list=ls())
 gc()
 
 # Load libraries
-library(abmi.themes)
 library(ggplot2)
 library(MetBrewer)
 

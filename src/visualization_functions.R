@@ -1,7 +1,7 @@
 #
 # Title: Functions for visualizing landscape connectivity
 # Created: October 31st, 2023
-# Last Updated: April 24th, 2024
+# Last Updated: April 25th, 2024
 # Author: Brandon Allen
 # Objectives: Define functions for landscape connectivity
 # Keywords: Landscape Connectivity, Difference, Trend, Resistance
@@ -19,7 +19,6 @@ lc_plot <- function(data.in, habitat, title) {
                 scale_fill_gradientn(name = paste0("Landscape \nConnectivity (%)"), colors = met.brewer(name = "Hiroshige", n = 100, type = "continuous"), guide = "colourbar") +
                 ggtitle(title) + 
                 theme_light() +
-                theme_abmi(font = "Montserrat") +
                 theme(axis.title = element_text(size=14),
                       axis.text.x = element_text(size=14),
                       axis.text.y = element_text(size=14),
@@ -27,6 +26,7 @@ lc_plot <- function(data.in, habitat, title) {
                       legend.title = element_text(size=14),
                       legend.text = element_text(size=14),
                       legend.key.size = unit(0.5, "cm"),
+                      legend.background = element_blank(),
                       axis.line = element_line(colour = "black"),
                       panel.border = element_rect(colour = "black", fill=NA, size=1),
                       legend.position = c(0.20, 0.15)) 
@@ -49,7 +49,6 @@ difference_plot <- function(data.in, habitat, title) {
                                      limits = c(-1 * max.value, max.value)) +
                 ggtitle(title) + 
                 theme_light() +
-                theme_abmi(font = "Montserrat") +
                 theme(axis.title = element_text(size=14),
                       axis.text.x = element_text(size=14),
                       axis.text.y = element_text(size=14),
@@ -57,6 +56,7 @@ difference_plot <- function(data.in, habitat, title) {
                       legend.title = element_text(size=14),
                       legend.text = element_text(size=14),
                       legend.key.size = unit(0.5, "cm"),
+                      legend.background = element_blank(),
                       axis.line = element_line(colour = "black"),
                       panel.border = element_rect(colour = "black", fill=NA, size=1),
                       legend.position = c(0.20, 0.15)) 
@@ -76,7 +76,6 @@ area_plot <- function(data.in, habitat, title) {
                          limits = c(0, 100)) +
     ggtitle(title) + 
     theme_light() +
-    theme_abmi(font = "Montserrat") +
     theme(axis.title = element_text(size=14),
           axis.text.x = element_text(size=14),
           axis.text.y = element_text(size=14),
@@ -84,6 +83,7 @@ area_plot <- function(data.in, habitat, title) {
           legend.title = element_text(size=14),
           legend.text = element_text(size=14),
           legend.key.size = unit(0.5, "cm"),
+          legend.background = element_blank(),
           axis.line = element_line(colour = "black"),
           panel.border = element_rect(colour = "black", fill=NA, size=1),
           legend.position = c(0.20, 0.15)) 
@@ -106,8 +106,7 @@ trend_plot <- function(data.in, x, y, title) {
                 xlab(paste0("Landscape Connectivity ", x, " (%)")) +
                 ylab(paste0("Landscape Connectivity ", y, " (%)")) +
                 theme_light() +
-                theme(axis.title = element_text(size=14)) +
-                theme_abmi(font = "Montserrat")
+                theme(axis.title = element_text(size=14))
 }
 
 ##############
@@ -123,7 +122,6 @@ resistance_plot <- function(data.in, habitat, legend, title) {
                          guide = "colourbar") +
     ggtitle(title) + 
     theme_light() +
-    theme_abmi(font = "Montserrat") +
     theme(axis.title = element_text(size=14),
           axis.text.x = element_text(size=14),
           axis.text.y = element_text(size=14),
@@ -131,6 +129,7 @@ resistance_plot <- function(data.in, habitat, legend, title) {
           legend.title = element_text(size=14),
           legend.text = element_text(size=14),
           legend.key.size = unit(0.5, "cm"),
+          legend.background = element_blank(),
           axis.line = element_line(colour = "black"),
           panel.border = element_rect(colour = "black", fill=NA, size=1),
           legend.position = c(0.20, 0.15)) 
