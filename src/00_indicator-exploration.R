@@ -1343,6 +1343,7 @@ dev.off()
 # Load libraries
 # 
 
+library(ggplot2)
 library(igraph)
 library(landscapemetrics)
 library(landscapetools)
@@ -1423,8 +1424,8 @@ for(disturb.id in disturbance) {
   landscape.classified <- landscape.classified$layer_1$class_1
   
   # Convert to polygon
-  landscape.polygon <- rasterToPolygons(landscape.classified)
-  landscape.polygon <- aggregate(landscape.polygon, by = "layer")
+  landscape.polygon <- rasterToPolygons(raster(landscape.classified))
+  landscape.polygon <- aggregate(landscape.polygon, by = "lyr.1")
   landscape.polygon <- st_as_sf(landscape.polygon)
   
   for(patch in patch.size) {
@@ -1473,6 +1474,8 @@ for(disturb.id in disturbance) {
     
     row.start <- 1
     row.end <- nrow(poly.dist)
+    colnames(poly.dist) <- seq(1:ncol(poly.dist))
+    rownames(poly.dist) <- seq(1:nrow(poly.dist))
     
     for(x in 1:ncol(poly.dist)) {
       
@@ -1495,7 +1498,7 @@ for(disturb.id in disturbance) {
     E(landscape.network)$weight <- log(exp(as.numeric(disperse * network.data$Dist * resistance))) * -1
     
     # Create habitat information
-    landscape.node <- data.frame(Patch = dissolved.polygon$layer,
+    landscape.node <- data.frame(Patch = dissolved.polygon$lyr.1,
                                  Native = st_area(dissolved.polygon))
     
     # Calculate metrics
@@ -1517,7 +1520,8 @@ for(disturb.id in disturbance) {
   
 }
 
-save(simulation.results, file = "results/tables/support/patch-size-simulation-results_2022-12-05.Rdata")
+# save(simulation.results, file = "results/tables/support/patch-size-simulation-results_2022-12-05.Rdata")
+save(simulation.results, file = "results/tables/support/patch-size-simulation-results_2024-04-24.Rdata")
 
 # Visualization
 simulation.results$Disturbance <- factor(simulation.results$Disturbance * 100)
