@@ -1,7 +1,7 @@
 #
 # Title: Functions for visualizing landscape connectivity
 # Created: October 31st, 2023
-# Last Updated: April 25th, 2024
+# Last Updated: April 30th, 2024
 # Author: Brandon Allen
 # Objectives: Define functions for landscape connectivity
 # Keywords: Landscape Connectivity, Difference, Trend, Resistance
@@ -50,6 +50,9 @@ difference_plot <- function(data.in, habitat, title) {
         max.value <- max(as.numeric(as.data.frame(data.in)[, habitat]), na.rm = TRUE)
         min.value <- min(as.numeric(as.data.frame(data.in)[, habitat]), na.rm = TRUE)
         
+        # Round up to the nearest five for the maximum
+        max.value <- 5*round(max.value/5)
+        
         above.0 <- colorRampPalette(centered.colors[6:10])(max.value)
         below.0 <- colorRampPalette(centered.colors[1:5])(min.value * -1)
         
@@ -61,7 +64,7 @@ difference_plot <- function(data.in, habitat, title) {
         # Visualize the plot
         ggplot() + 
                 geom_sf(data = data.in, aes_string(fill = habitat), show.legend = TRUE) +
-                scale_fill_gradientn(name = paste0("Percent Change (%)"), 
+                scale_fill_gradientn(name = paste0("Percent Decline (%)"), 
                                      colors = centered.colors, 
                                      guide = "colourbar", 
                                      limits = c(min.value, max.value)) +
