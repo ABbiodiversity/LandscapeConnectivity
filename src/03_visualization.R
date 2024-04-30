@@ -1,7 +1,7 @@
 #
 # Title: Visualization of landscape connectivity
 # Created: October 11th, 2022
-# Last Updated: April 24th, 2024
+# Last Updated: April 29th, 2024
 # Author: Brandon Allen
 # Objectives: Visualize the landscape connectivity indicator.
 # Keywords: Notes, Connectivity, Resistance, Forest recovery
@@ -401,18 +401,18 @@ resistance.2021 <- read_sf("data/processed/huc-8/2021/movecost/huc-8-movecost_20
 
 resist.grassland <- resistance_plot(data.in = resistance.2021, 
                                     habitat = "GrCur", 
-                                    legend = "Resistance",
-                                    title = "Grass-Shrub Resistance 2021")
+                                    legend = "Cost Distance",
+                                    title = "Grass-Shrub Cost Distance 2021")
 
 resist.upland <- resistance_plot(data.in = resistance.2021, 
                                     habitat = "UpCur", 
-                                    legend = "Resistance",
-                                    title = "Upland Forest Resistance 2021")
+                                    legend = "Cost Distance",
+                                    title = "Upland Forest Cost Distance 2021")
 
 resist.lowland <- resistance_plot(data.in = resistance.2021, 
                                     habitat = "LowCur", 
-                                    legend = "Resistance",
-                                    title = "Lowland Forest Resistance 2021")
+                                    legend = "Cost Distance",
+                                    title = "Lowland Forest Cost Distance 2021")
 
 ggsave(filename = "results/figures/support/resistance-current-2021.png",
        plot = ggarrange(resist.grassland, resist.upland,
@@ -429,18 +429,18 @@ ggsave(filename = "results/figures/support/resistance-current-2021.png",
 
 resist.grassland <- resistance_plot(data.in = resistance.2021, 
                                     habitat = "GrRef", 
-                                    legend = "Resistance",
-                                    title = "Grass-Shrub Resistance Reference")
+                                    legend = "Cost Distance",
+                                    title = "Grass-Shrub Cost Distance Reference")
 
 resist.upland <- resistance_plot(data.in = resistance.2021, 
                                  habitat = "UpRef", 
-                                 legend = "Resistance",
-                                 title = "Upland Forest Resistance Reference")
+                                 legend = "Cost Distance",
+                                 title = "Upland Forest Cost Distance Reference")
 
 resist.lowland <- resistance_plot(data.in = resistance.2021, 
                                   habitat = "LowRef", 
-                                  legend = "Resistance",
-                                  title = "Lowland Forest Resistance Reference")
+                                  legend = "Cost Distance",
+                                  title = "Lowland Forest Cost Distance Reference")
 
 ggsave(filename = "results/figures/support/resistance-reference-2021.png",
        plot = ggarrange(resist.grassland, resist.upland,
@@ -470,17 +470,17 @@ resistance.2021$Lowland <- ifelse(resistance.2021$LowCur > resistance.2021$LowRe
 resist.grassland <- resistance_plot(data.in = resistance.2021, 
                                 habitat = "Grassland", 
                                 legend = "Percent Change (%)",
-                                title = "Grass-Shrub Resistance")
+                                title = "Grass-Shrub Cost Distance")
 
 resist.upland <- resistance_plot(data.in = resistance.2021, 
                                 habitat = "Upland", 
                                 legend = "Percent Change (%)",
-                                title = "Upland Forest Resistance")
+                                title = "Upland Forest Cost Distance")
 
 resist.lowland <- resistance_plot(data.in = resistance.2021, 
                                 habitat = "Lowland", 
                                 legend = "Percent Change (%)",
-                                title = "Lowland Forest Resistance")
+                                title = "Lowland Forest Cost Distance")
 
 ggsave(filename = "results/figures/support/resistance-change-2021.png",
        plot = ggarrange(resist.grassland, resist.upland,
