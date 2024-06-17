@@ -27,7 +27,7 @@ lc_plot <- function(data.in, habitat, title) {
                       axis.text.y = element_text(size=14),
                       title = element_text(size=14), 
                       legend.title = element_text(size=14),
-                      legend.text = element_text(size=14),
+                      legend.text = element_text(size=12),
                       legend.key.size = unit(0.5, "cm"),
                       legend.background = element_blank(),
                       axis.line = element_line(colour = "black"),
@@ -51,7 +51,8 @@ difference_plot <- function(data.in, habitat, title) {
         min.value <- min(as.numeric(as.data.frame(data.in)[, habitat]), na.rm = TRUE)
         
         # Round up to the nearest five for the maximum
-        max.value <- 5*round(max.value/5)
+        max.value <- 5*ceiling(max.value/5)
+        min.value <- (5*ceiling(abs(min.value)/5)) * -1
         
         above.0 <- colorRampPalette(centered.colors[6:10])(max.value)
         below.0 <- colorRampPalette(centered.colors[1:5])(min.value * -1)
@@ -64,10 +65,12 @@ difference_plot <- function(data.in, habitat, title) {
         # Visualize the plot
         ggplot() + 
                 geom_sf(data = data.in, aes_string(fill = habitat), show.legend = TRUE) +
-                scale_fill_gradientn(name = paste0("Percent Decline (%)"), 
+                scale_fill_gradientn(name = paste0("Connectivity Change (%)"), 
                                      colors = centered.colors, 
                                      guide = "colourbar", 
-                                     limits = c(min.value, max.value)) +
+                                     limits = c(min.value, max.value),
+                                     breaks = c(rev(seq(0, min.value, -10)), max.value),
+                                     labels = c(rev(seq(0, min.value, -10)), max.value)) +
                 ggtitle(title) + 
                 theme_light() +
                 theme(axis.title = element_text(size=14),
@@ -75,7 +78,7 @@ difference_plot <- function(data.in, habitat, title) {
                       axis.text.y = element_text(size=14),
                       title = element_text(size=14), 
                       legend.title = element_text(size=14),
-                      legend.text = element_text(size=14),
+                      legend.text = element_text(size=12),
                       legend.key.size = unit(0.5, "cm"),
                       legend.background = element_blank(),
                       axis.line = element_line(colour = "black"),
@@ -102,7 +105,7 @@ area_plot <- function(data.in, habitat, title) {
           axis.text.y = element_text(size=14),
           title = element_text(size=14), 
           legend.title = element_text(size=14),
-          legend.text = element_text(size=14),
+          legend.text = element_text(size=12),
           legend.key.size = unit(0.5, "cm"),
           legend.background = element_blank(),
           axis.line = element_line(colour = "black"),
@@ -148,7 +151,7 @@ resistance_plot <- function(data.in, habitat, legend, title) {
           axis.text.y = element_text(size=14),
           title = element_text(size=14), 
           legend.title = element_text(size=14),
-          legend.text = element_text(size=14),
+          legend.text = element_text(size=12),
           legend.key.size = unit(0.5, "cm"),
           legend.background = element_blank(),
           axis.line = element_line(colour = "black"),
