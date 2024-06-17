@@ -1,7 +1,7 @@
 #
 # Title: Visualization of landscape connectivity
 # Created: October 11th, 2022
-# Last Updated: April 29th, 2024
+# Last Updated: June 17th, 2024
 # Author: Brandon Allen
 # Objectives: Visualize the landscape connectivity indicator.
 # Keywords: Notes, Connectivity, Resistance, Forest recovery
@@ -22,6 +22,7 @@ rm(list=ls())
 gc()
 
 # Load libraries
+library(ggnewscale)
 library(ggplot2)
 library(ggpubr)
 library(MetBrewer)
@@ -46,6 +47,19 @@ rm(results.connect, results.current, results.reference)
 
 # Load the blank shapefile
 connectivity.results <- read_sf("data/processed/huc-8/2010/movecost/huc-8-movecost_2010.dbf")
+
+# Calculate the dominant landcover type
+connectivity.results$LandcoverDominant <- NA
+
+for(huc in connectivity.results$HUC_8) {
+  
+  id <- names(which.max(landscape.connecivity.2021[landscape.connecivity.2021$HUC_8 == huc, 
+                                                   c("UplandForestArea", "LowlandForestArea", "GrasslandArea")]))
+  
+  id <- gsub("Area", "", id)
+  connectivity.results[connectivity.results$HUC_8 == huc, "LandcoverDominant"] <- id
+  
+}
 
 # Align the rows
 landscape.connecivity.2010 <- landscape.connecivity.2010[connectivity.results$HUC_8, ]
@@ -128,7 +142,7 @@ connect.2020 <- lc_plot(data.in = connectivity.results,
 connect.2021 <- lc_plot(data.in = connectivity.results, 
                         habitat = "Connect2021", 
                         title = "Connectivity 2021")
-
+  
 ggsave(filename = "results/figures/indicator/landscape-connectivity.png",
        plot = ggarrange(connect.2010, connect.2018,
                         connect.2019, connect.2020, connect.2021,
@@ -212,6 +226,24 @@ connect.area <- area_plot(data.in = upland.trend,
                           habitat = "Area", 
                           title = "")
 
+# Define the outline of specific regions
+subset <- connectivity.results[connectivity.results$HUC_8 %in% connectivity.results$HUC_8[connectivity.results$LandcoverDominant == "UplandForest"], ]
+subset$Color <- "#000000"
+subset$Fill <- "#000000"
+connect.2010.2021 <- connect.2010.2021 + 
+  new_scale_color() +
+  new_scale_fill() +
+  geom_sf(data = subset, aes(color = Color, fill = Fill), linewidth = 1, show.legend = FALSE) +
+  scale_fill_manual(values =  alpha(subset$Color, 0.0), guide = "none") +
+  scale_color_manual(values =  alpha(subset$Color, 1), guide = "none")
+
+connect.area <- connect.area + 
+  new_scale_color() +
+  new_scale_fill() +
+  geom_sf(data = subset, aes(color = Color, fill = Fill), linewidth = 1, show.legend = FALSE) +
+  scale_fill_manual(values =  alpha(subset$Color, 0.0), guide = "none") +
+  scale_color_manual(values =  alpha(subset$Color, 1), guide = "none")
+
 ggsave(filename = "results/figures/support/upland-forest-connectivity-trend-spatial.png",
        plot = ggarrange(connect.2010.2021, 
                         connect.area, ncol = 2),
@@ -282,6 +314,25 @@ connect.2010.2021 <- difference_plot(data.in = lowland.trend,
 connect.area <- area_plot(data.in = lowland.trend, 
                           habitat = "Area", 
                           title = "")
+
+
+# Define the outline of specific regions
+subset <- connectivity.results[connectivity.results$HUC_8 %in% connectivity.results$HUC_8[connectivity.results$LandcoverDominant == "LowlandForest"], ]
+subset$Color <- "#000000"
+subset$Fill <- "#000000"
+connect.2010.2021 <- connect.2010.2021 + 
+  new_scale_color() +
+  new_scale_fill() +
+  geom_sf(data = subset, aes(color = Color, fill = Fill), linewidth = 1, show.legend = FALSE) +
+  scale_fill_manual(values =  alpha(subset$Color, 0.0), guide = "none") +
+  scale_color_manual(values =  alpha(subset$Color, 1), guide = "none")
+
+connect.area <- connect.area + 
+  new_scale_color() +
+  new_scale_fill() +
+  geom_sf(data = subset, aes(color = Color, fill = Fill), linewidth = 1, show.legend = FALSE) +
+  scale_fill_manual(values =  alpha(subset$Color, 0.0), guide = "none") +
+  scale_color_manual(values =  alpha(subset$Color, 1), guide = "none")
 
 ggsave(filename = "results/figures/support/lowland-forest-connectivity-trend-spatial.png",
        plot = ggarrange(connect.2010.2021, 
@@ -354,6 +405,25 @@ connect.2010.2021 <- difference_plot(data.in = grassland.trend,
 connect.area <- area_plot(data.in = grassland.trend, 
                           habitat = "Area", 
                           title = "")
+
+
+# Define the outline of specific regions
+subset <- connectivity.results[connectivity.results$HUC_8 %in% connectivity.results$HUC_8[connectivity.results$LandcoverDominant == "Grassland"], ]
+subset$Color <- "#000000"
+subset$Fill <- "#000000"
+connect.2010.2021 <- connect.2010.2021 + 
+  new_scale_color() +
+  new_scale_fill() +
+  geom_sf(data = subset, aes(color = Color, fill = Fill), linewidth = 1, show.legend = FALSE) +
+  scale_fill_manual(values =  alpha(subset$Color, 0.0), guide = "none") +
+  scale_color_manual(values =  alpha(subset$Color, 1), guide = "none")
+
+connect.area <- connect.area + 
+  new_scale_color() +
+  new_scale_fill() +
+  geom_sf(data = subset, aes(color = Color, fill = Fill), linewidth = 1, show.legend = FALSE) +
+  scale_fill_manual(values =  alpha(subset$Color, 0.0), guide = "none") +
+  scale_color_manual(values =  alpha(subset$Color, 1), guide = "none")
 
 ggsave(filename = "results/figures/support/grassland-connectivity-trend-spatial.png",
        plot = ggarrange(connect.2010.2021, 
