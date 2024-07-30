@@ -1,7 +1,7 @@
 #
 # Title: Visualization of landscape connectivity
 # Created: October 11th, 2022
-# Last Updated: June 17th, 2024
+# Last Updated: July 30th, 2024
 # Author: Brandon Allen
 # Objectives: Visualize the landscape connectivity indicator.
 # Keywords: Notes, Connectivity, Resistance, Forest recovery
@@ -143,7 +143,7 @@ connect.2021 <- lc_plot(data.in = connectivity.results,
                         habitat = "Connect2021", 
                         title = "Connectivity 2021")
   
-ggsave(filename = "results/figures/indicator/landscape-connectivity.png",
+ggsave(filename = "results/figures/indicator/landscape-connectivity-appendix.png",
        plot = ggarrange(connect.2010, connect.2018,
                         connect.2019, connect.2020, connect.2021,
                         ncol = 3, nrow = 2),
@@ -156,10 +156,11 @@ connect.2010.2021 <- difference_plot(data.in = total.trend,
                                      habitat = "Difference", 
                                      title = "")
 
-ggsave(filename = "results/figures/support/landscape-connectivity-trend-spatial.png",
-       plot = connect.2010.2021,
+ggsave(filename = "results/figures/indicator/landscape-connectivity-in-text.png",
+       plot = ggarrange(connect.2010, connect.2021, connect.2010.2021,
+                        ncol = 3, nrow = 1),
        height = 1200,
-       width = 900,
+       width = 2700,
        dpi = 100,
        units = "px")
 
@@ -209,7 +210,7 @@ connect.2021 <- lc_plot(data.in = connectivity.results,
                         habitat = "Connect2021", 
                         title = "Upland Forest Connectivity 2021")
 
-ggsave(filename = "results/figures/indicator/upland-forest-connectivity.png",
+ggsave(filename = "results/figures/indicator/upland-forest-connectivity-appendix.png",
        plot = ggarrange(connect.2010, connect.2018,
                         connect.2019, connect.2020, connect.2021,
                         ncol = 3, nrow = 2),
@@ -222,7 +223,7 @@ connect.2010.2021 <- difference_plot(data.in = upland.trend,
                                      habitat = "Difference", 
                                      title = "")
 
-connect.area <- area_plot(data.in = upland.trend, 
+upland.area <- area_plot(data.in = upland.trend, 
                           habitat = "Area", 
                           title = "")
 
@@ -237,18 +238,31 @@ connect.2010.2021 <- connect.2010.2021 +
   scale_fill_manual(values =  alpha(subset$Color, 0.0), guide = "none") +
   scale_color_manual(values =  alpha(subset$Color, 1), guide = "none")
 
-connect.area <- connect.area + 
+connect.2010 <- connect.2010 + 
   new_scale_color() +
   new_scale_fill() +
   geom_sf(data = subset, aes(color = Color, fill = Fill), linewidth = 1, show.legend = FALSE) +
   scale_fill_manual(values =  alpha(subset$Color, 0.0), guide = "none") +
   scale_color_manual(values =  alpha(subset$Color, 1), guide = "none")
 
-ggsave(filename = "results/figures/support/upland-forest-connectivity-trend-spatial.png",
-       plot = ggarrange(connect.2010.2021, 
-                        connect.area, ncol = 2),
+connect.2021 <- connect.2021 + 
+  new_scale_color() +
+  new_scale_fill() +
+  geom_sf(data = subset, aes(color = Color, fill = Fill), linewidth = 1, show.legend = FALSE) +
+  scale_fill_manual(values =  alpha(subset$Color, 0.0), guide = "none") +
+  scale_color_manual(values =  alpha(subset$Color, 1), guide = "none")
+
+upland.area <- upland.area + 
+  new_scale_color() +
+  new_scale_fill() +
+  geom_sf(data = subset, aes(color = Color, fill = Fill), linewidth = 1, show.legend = FALSE) +
+  scale_fill_manual(values =  alpha(subset$Color, 0.0), guide = "none") +
+  scale_color_manual(values =  alpha(subset$Color, 1), guide = "none")
+
+ggsave(filename = "results/figures/indicator/upland-forest-connectivity-in-text.png",
+       plot = ggarrange(connect.2010, connect.2021, connect.2010.2021, ncol = 3, nrow = 1),
        height = 1200,
-       width = 1800,
+       width = 2700,
        dpi = 100,
        units = "px")
 
@@ -298,7 +312,7 @@ connect.2021 <- lc_plot(data.in = connectivity.results,
                         habitat = "Connect2021", 
                         title = "Lowland Forest Connectivity 2021")
 
-ggsave(filename = "results/figures/indicator/lowland-forest-connectivity.png",
+ggsave(filename = "results/figures/indicator/lowland-forest-connectivity-appendix.png",
        plot = ggarrange(connect.2010, connect.2018,
                         connect.2019, connect.2020, connect.2021,
                         ncol = 3, nrow = 2),
@@ -311,7 +325,7 @@ connect.2010.2021 <- difference_plot(data.in = lowland.trend,
                                      habitat = "Difference", 
                                      title = "")
 
-connect.area <- area_plot(data.in = lowland.trend, 
+lowland.area <- area_plot(data.in = lowland.trend, 
                           habitat = "Area", 
                           title = "")
 
@@ -327,18 +341,31 @@ connect.2010.2021 <- connect.2010.2021 +
   scale_fill_manual(values =  alpha(subset$Color, 0.0), guide = "none") +
   scale_color_manual(values =  alpha(subset$Color, 1), guide = "none")
 
-connect.area <- connect.area + 
+connect.2021 <- connect.2021 + 
   new_scale_color() +
   new_scale_fill() +
   geom_sf(data = subset, aes(color = Color, fill = Fill), linewidth = 1, show.legend = FALSE) +
   scale_fill_manual(values =  alpha(subset$Color, 0.0), guide = "none") +
   scale_color_manual(values =  alpha(subset$Color, 1), guide = "none")
 
-ggsave(filename = "results/figures/support/lowland-forest-connectivity-trend-spatial.png",
-       plot = ggarrange(connect.2010.2021, 
-                        connect.area, ncol = 2),
+connect.2010 <- connect.2010 + 
+  new_scale_color() +
+  new_scale_fill() +
+  geom_sf(data = subset, aes(color = Color, fill = Fill), linewidth = 1, show.legend = FALSE) +
+  scale_fill_manual(values =  alpha(subset$Color, 0.0), guide = "none") +
+  scale_color_manual(values =  alpha(subset$Color, 1), guide = "none")
+
+lowland.area <- lowland.area + 
+  new_scale_color() +
+  new_scale_fill() +
+  geom_sf(data = subset, aes(color = Color, fill = Fill), linewidth = 1, show.legend = FALSE) +
+  scale_fill_manual(values =  alpha(subset$Color, 0.0), guide = "none") +
+  scale_color_manual(values =  alpha(subset$Color, 1), guide = "none")
+
+ggsave(filename = "results/figures/indicator//lowland-forest-connectivity-in-text.png",
+       plot = ggarrange(connect.2010, connect.2021, connect.2010.2021, ncol = 3, nrow = 1),
        height = 1200,
-       width = 1800,
+       width = 2700,
        dpi = 100,
        units = "px")
 
@@ -389,7 +416,7 @@ connect.2021 <- lc_plot(data.in = connectivity.results,
                         habitat = "Connect2021", 
                         title = "Grass-Shrub Connectivity 2021")
 
-ggsave(filename = "results/figures/indicator/grassland-connectivity.png",
+ggsave(filename = "results/figures/indicator/grassland-connectivity-appendix.png",
        plot = ggarrange(connect.2010, connect.2018,
                         connect.2019, connect.2020, connect.2021,
                         ncol = 3, nrow = 2),
@@ -402,7 +429,7 @@ connect.2010.2021 <- difference_plot(data.in = grassland.trend,
                                      habitat = "Difference", 
                                      title = "")
 
-connect.area <- area_plot(data.in = grassland.trend, 
+grass.area <- area_plot(data.in = grassland.trend, 
                           habitat = "Area", 
                           title = "")
 
@@ -418,18 +445,31 @@ connect.2010.2021 <- connect.2010.2021 +
   scale_fill_manual(values =  alpha(subset$Color, 0.0), guide = "none") +
   scale_color_manual(values =  alpha(subset$Color, 1), guide = "none")
 
-connect.area <- connect.area + 
+connect.2010 <- connect.2010 + 
   new_scale_color() +
   new_scale_fill() +
   geom_sf(data = subset, aes(color = Color, fill = Fill), linewidth = 1, show.legend = FALSE) +
   scale_fill_manual(values =  alpha(subset$Color, 0.0), guide = "none") +
   scale_color_manual(values =  alpha(subset$Color, 1), guide = "none")
 
-ggsave(filename = "results/figures/support/grassland-connectivity-trend-spatial.png",
-       plot = ggarrange(connect.2010.2021, 
-                        connect.area, ncol = 2),
+connect.2021 <- connect.2021 + 
+  new_scale_color() +
+  new_scale_fill() +
+  geom_sf(data = subset, aes(color = Color, fill = Fill), linewidth = 1, show.legend = FALSE) +
+  scale_fill_manual(values =  alpha(subset$Color, 0.0), guide = "none") +
+  scale_color_manual(values =  alpha(subset$Color, 1), guide = "none")
+
+grass.area <- grass.area + 
+  new_scale_color() +
+  new_scale_fill() +
+  geom_sf(data = subset, aes(color = Color, fill = Fill), linewidth = 1, show.legend = FALSE) +
+  scale_fill_manual(values =  alpha(subset$Color, 0.0), guide = "none") +
+  scale_color_manual(values =  alpha(subset$Color, 1), guide = "none")
+
+ggsave(filename = "results/figures/indicator/grassland-connectivity-in-text.png",
+       plot = ggarrange(connect.2010, connect.2021, connect.2010.2021, ncol = 3, nrow = 1),
        height = 1200,
-       width = 1800,
+       width = 2700,
        dpi = 100,
        units = "px")
 
@@ -444,6 +484,18 @@ ggsave(filename = "results/figures/support/grassland-connectivity-trend.png",
        width = 800,
        dpi = 100,
        units = "px")
+
+#############
+# Area plot #
+#############
+
+ggsave(filename = "results/figures/indicator/habitat-area.png",
+       plot = ggarrange(upland.area, lowland.area, grass.area, ncol = 3, nrow = 1),
+       height = 1200,
+       width = 2700,
+       dpi = 100,
+       units = "px")
+
 
 ##############
 # Resistance # 
