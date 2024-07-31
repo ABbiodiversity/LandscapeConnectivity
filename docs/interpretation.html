@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>5 Interpretation | Development of the Landscape Cnnecitivty indicator for Alberta, Canada</title>
+  <meta name="description" content="Technical documentation describing the landscape connectivity indicator." />
+  <meta name="generator" content="bookdown 0.39 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="5 Interpretation | Development of the Landscape Cnnecitivty indicator for Alberta, Canada" />
+  <meta property="og:type" content="book" />
+  
+  <meta property="og:description" content="Technical documentation describing the landscape connectivity indicator." />
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="5 Interpretation | Development of the Landscape Cnnecitivty indicator for Alberta, Canada" />
+  
+  <meta name="twitter:description" content="Technical documentation describing the landscape connectivity indicator." />
+  
+
+<meta name="author" content="Brandon Allen" />
+
+
+<meta name="date" content="2024-07-31" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="measuring-landscape-connectivity.html"/>
+<link rel="next" href="literature.html"/>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+
+
+
+<style type="text/css">
+  
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+</style>
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">Landscape Connectivity</a></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> Summary</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="index.html"><a href="index.html#supporting-information"><i class="fa fa-check"></i><b>1.1</b> Supporting Information</a></li>
+<li class="chapter" data-level="1.2" data-path="index.html"><a href="index.html#acknowledgement"><i class="fa fa-check"></i><b>1.2</b> Acknowledgement</a></li>
+<li class="chapter" data-level="1.3" data-path="index.html"><a href="index.html#suggested-citation"><i class="fa fa-check"></i><b>1.3</b> Suggested citation</a></li>
+<li class="chapter" data-level="1.4" data-path="index.html"><a href="index.html#contact"><i class="fa fa-check"></i><b>1.4</b> Contact</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="introduction.html"><a href="introduction.html"><i class="fa fa-check"></i><b>2</b> Introduction</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="introduction.html"><a href="introduction.html#what-is-connectivity"><i class="fa fa-check"></i><b>2.1</b> What is connectivity?</a></li>
+<li class="chapter" data-level="2.2" data-path="introduction.html"><a href="introduction.html#how-can-it-be-measured"><i class="fa fa-check"></i><b>2.2</b> How can it be measured?</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="landscape-connectivity-indicator.html"><a href="landscape-connectivity-indicator.html"><i class="fa fa-check"></i><b>3</b> Landscape Connectivity Indicator</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="landscape-connectivity-indicator.html"><a href="landscape-connectivity-indicator.html#gis-layers"><i class="fa fa-check"></i><b>3.1</b> GIS Layers</a></li>
+<li class="chapter" data-level="3.2" data-path="landscape-connectivity-indicator.html"><a href="landscape-connectivity-indicator.html#key-parameters"><i class="fa fa-check"></i><b>3.2</b> Key Parameters</a>
+<ul>
+<li class="chapter" data-level="3.2.1" data-path="landscape-connectivity-indicator.html"><a href="landscape-connectivity-indicator.html#dispersal"><i class="fa fa-check"></i><b>3.2.1</b> Dispersal</a></li>
+<li class="chapter" data-level="3.2.2" data-path="landscape-connectivity-indicator.html"><a href="landscape-connectivity-indicator.html#cost-distance"><i class="fa fa-check"></i><b>3.2.2</b> Cost distance</a></li>
+<li class="chapter" data-level="3.2.3" data-path="landscape-connectivity-indicator.html"><a href="landscape-connectivity-indicator.html#minimum-viable-patch-size"><i class="fa fa-check"></i><b>3.2.3</b> Minimum viable patch size</a></li>
+<li class="chapter" data-level="3.2.4" data-path="landscape-connectivity-indicator.html"><a href="landscape-connectivity-indicator.html#reference-condition"><i class="fa fa-check"></i><b>3.2.4</b> Reference condition</a></li>
+<li class="chapter" data-level="3.2.5" data-path="landscape-connectivity-indicator.html"><a href="landscape-connectivity-indicator.html#recovery-of-forest-harvest-areas"><i class="fa fa-check"></i><b>3.2.5</b> Recovery of forest harvest areas</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="measuring-landscape-connectivity.html"><a href="measuring-landscape-connectivity.html"><i class="fa fa-check"></i><b>4</b> Measuring Landscape Connectivity</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="measuring-landscape-connectivity.html"><a href="measuring-landscape-connectivity.html#aggregated-landscape-connectivity"><i class="fa fa-check"></i><b>4.1</b> Aggregated Landscape Connectivity</a></li>
+<li class="chapter" data-level="4.2" data-path="measuring-landscape-connectivity.html"><a href="measuring-landscape-connectivity.html#landscape-connectivity-for-upland-forest"><i class="fa fa-check"></i><b>4.2</b> Landscape Connectivity for Upland Forest</a></li>
+<li class="chapter" data-level="4.3" data-path="measuring-landscape-connectivity.html"><a href="measuring-landscape-connectivity.html#landscape-connectivity-for-lowland-forest"><i class="fa fa-check"></i><b>4.3</b> Landscape Connectivity for Lowland Forest</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="interpretation.html"><a href="interpretation.html"><i class="fa fa-check"></i><b>5</b> Interpretation</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="interpretation.html"><a href="interpretation.html#limitations"><i class="fa fa-check"></i><b>5.1</b> Limitations</a></li>
+<li class="chapter" data-level="5.2" data-path="interpretation.html"><a href="interpretation.html#supporting-gis-information"><i class="fa fa-check"></i><b>5.2</b> Supporting GIS Information</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="literature.html"><a href="literature.html"><i class="fa fa-check"></i><b>6</b> Literature</a></li>
+<li class="divider"></li>
+<li><a href="https://github.com/ABbiodiversity" target="blank">Published by ABMI</a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Development of the Landscape Cnnecitivty indicator for Alberta, Canada</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="interpretation" class="section level1 hasAnchor" number="5">
+<h1><span class="header-section-number">5</span> Interpretation<a href="interpretation.html#interpretation" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<p>There are two main factors that can result in lower landscape connectivity. The first factor is the direct loss of habitat. As we are comparing current landscape connectivity to those under a reference condition, any direct loss of habitat results in a lower connectivity. This is true even if the remaining habitat under current conditions is clumped together (i.e., highly connected within the remaining fragments of habitat).</p>
+<p>The second factor is the fragmentation of habitat patches. There are disturbances, such as linear features, that are more likely to fragment habitat patches. Even though these features have a small direct effect on habitat removal, they can increase the number of habitat patches in a region. This means species are no longer able to disperse through a singular large habitat patch, but instead must cross multiple human footprint features to reach the same location. Even if a species has a high probability of successfully dispersing across a single footprint feature (e.g., 90%), the cumulative impact of having to cross multiple features (e.g., 10 features) results in a low probability of success (<span class="math inline">\(0.9^10 * 100% = 34.9% Success\)</span>). This cumulative impact of fragmenting footprint features can create situations where landscape connectivity is low despite having large amounts of native habitat. These situations show how the landscape connectivity index provides novel information about the impacts of footprint outside of the direct loss of habitat.</p>
+<div id="limitations" class="section level2 hasAnchor" number="5.1">
+<h2><span class="header-section-number">5.1</span> Limitations<a href="interpretation.html#limitations" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>All indicators, as representations of a component of the environment, have limitations. A single indicator cannot measure all aspects of habitat quantity and/or quality. The Landscape Connectivity indicator is intended to serve as a general indicator of habitat connectivity at the regional and sub-regional levels. As such, we acknowledge and accept limitations associated with the indicator:</p>
+<ul>
+<li><p>This indicator does not capture the connectivity of migratory species or identify specific connectivity corridors. The ECA index was calculated within HUC-8 watersheds.</p></li>
+<li><p>Species range in their abilities to disperse and colonize habitats. While this indicator is intended to represent landscape connectivity for a large suite of species, it will not capture all species.</p></li>
+<li><p>Recovery of human footprint is only incorporated for forest harvest areas through recovery curves and for those features that have been reclaimed and are no longer present in the Human Footprint Inventory.</p></li>
+</ul>
+</div>
+<div id="supporting-gis-information" class="section level2 hasAnchor" number="5.2">
+<h2><span class="header-section-number">5.2</span> Supporting GIS Information<a href="interpretation.html#supporting-gis-information" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>The Landscape Connectivity indicator layer is available on GeoDiscover Alberta (<a href="https://open.alberta.ca/opendata/gda-0f23e47d-fce1-4636-8760-02df5f83c18e">Landscape Connectivity Indicator for Alberta</a>). The layer presents aggregated landscape connectivity values and landscape connectivity for Upland Forest, Lowland Forest and Grass-Shrub for HUC-8 watersheds in Alberta over a time series (2010, 2018, 2019, 2020, 2021). Table 5 describes the attributes associated with the published data layer. Note that if a particular habitat type is not present in a HUC-8 watershed, the connectivity value is coded as -9999 for all time steps.</p>
+
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="measuring-landscape-connectivity.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="literature.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": null,
+"text": null
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": null,
+"search": {
+"engine": "fuse",
+"options": null
+},
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>4 Measuring Landscape Connectivity | Development of the Landscape Cnnecitivty indicator for Alberta, Canada</title>
+  <meta name="description" content="Technical documentation describing the landscape connectivity indicator." />
+  <meta name="generator" content="bookdown 0.39 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="4 Measuring Landscape Connectivity | Development of the Landscape Cnnecitivty indicator for Alberta, Canada" />
+  <meta property="og:type" content="book" />
+  
+  <meta property="og:description" content="Technical documentation describing the landscape connectivity indicator." />
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="4 Measuring Landscape Connectivity | Development of the Landscape Cnnecitivty indicator for Alberta, Canada" />
+  
+  <meta name="twitter:description" content="Technical documentation describing the landscape connectivity indicator." />
+  
+
+<meta name="author" content="Brandon Allen" />
+
+
+<meta name="date" content="2024-07-31" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="landscape-connectivity-indicator.html"/>
+<link rel="next" href="interpretation.html"/>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+
+
+
+<style type="text/css">
+  
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+</style>
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">Landscape Connectivity</a></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> Summary</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="index.html"><a href="index.html#supporting-information"><i class="fa fa-check"></i><b>1.1</b> Supporting Information</a></li>
+<li class="chapter" data-level="1.2" data-path="index.html"><a href="index.html#acknowledgement"><i class="fa fa-check"></i><b>1.2</b> Acknowledgement</a></li>
+<li class="chapter" data-level="1.3" data-path="index.html"><a href="index.html#suggested-citation"><i class="fa fa-check"></i><b>1.3</b> Suggested citation</a></li>
+<li class="chapter" data-level="1.4" data-path="index.html"><a href="index.html#contact"><i class="fa fa-check"></i><b>1.4</b> Contact</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="introduction.html"><a href="introduction.html"><i class="fa fa-check"></i><b>2</b> Introduction</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="introduction.html"><a href="introduction.html#what-is-connectivity"><i class="fa fa-check"></i><b>2.1</b> What is connectivity?</a></li>
+<li class="chapter" data-level="2.2" data-path="introduction.html"><a href="introduction.html#how-can-it-be-measured"><i class="fa fa-check"></i><b>2.2</b> How can it be measured?</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="landscape-connectivity-indicator.html"><a href="landscape-connectivity-indicator.html"><i class="fa fa-check"></i><b>3</b> Landscape Connectivity Indicator</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="landscape-connectivity-indicator.html"><a href="landscape-connectivity-indicator.html#gis-layers"><i class="fa fa-check"></i><b>3.1</b> GIS Layers</a></li>
+<li class="chapter" data-level="3.2" data-path="landscape-connectivity-indicator.html"><a href="landscape-connectivity-indicator.html#key-parameters"><i class="fa fa-check"></i><b>3.2</b> Key Parameters</a>
+<ul>
+<li class="chapter" data-level="3.2.1" data-path="landscape-connectivity-indicator.html"><a href="landscape-connectivity-indicator.html#dispersal"><i class="fa fa-check"></i><b>3.2.1</b> Dispersal</a></li>
+<li class="chapter" data-level="3.2.2" data-path="landscape-connectivity-indicator.html"><a href="landscape-connectivity-indicator.html#cost-distance"><i class="fa fa-check"></i><b>3.2.2</b> Cost distance</a></li>
+<li class="chapter" data-level="3.2.3" data-path="landscape-connectivity-indicator.html"><a href="landscape-connectivity-indicator.html#minimum-viable-patch-size"><i class="fa fa-check"></i><b>3.2.3</b> Minimum viable patch size</a></li>
+<li class="chapter" data-level="3.2.4" data-path="landscape-connectivity-indicator.html"><a href="landscape-connectivity-indicator.html#reference-condition"><i class="fa fa-check"></i><b>3.2.4</b> Reference condition</a></li>
+<li class="chapter" data-level="3.2.5" data-path="landscape-connectivity-indicator.html"><a href="landscape-connectivity-indicator.html#recovery-of-forest-harvest-areas"><i class="fa fa-check"></i><b>3.2.5</b> Recovery of forest harvest areas</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="measuring-landscape-connectivity.html"><a href="measuring-landscape-connectivity.html"><i class="fa fa-check"></i><b>4</b> Measuring Landscape Connectivity</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="measuring-landscape-connectivity.html"><a href="measuring-landscape-connectivity.html#aggregated-landscape-connectivity"><i class="fa fa-check"></i><b>4.1</b> Aggregated Landscape Connectivity</a></li>
+<li class="chapter" data-level="4.2" data-path="measuring-landscape-connectivity.html"><a href="measuring-landscape-connectivity.html#landscape-connectivity-for-upland-forest"><i class="fa fa-check"></i><b>4.2</b> Landscape Connectivity for Upland Forest</a></li>
+<li class="chapter" data-level="4.3" data-path="measuring-landscape-connectivity.html"><a href="measuring-landscape-connectivity.html#landscape-connectivity-for-lowland-forest"><i class="fa fa-check"></i><b>4.3</b> Landscape Connectivity for Lowland Forest</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="interpretation.html"><a href="interpretation.html"><i class="fa fa-check"></i><b>5</b> Interpretation</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="interpretation.html"><a href="interpretation.html#limitations"><i class="fa fa-check"></i><b>5.1</b> Limitations</a></li>
+<li class="chapter" data-level="5.2" data-path="interpretation.html"><a href="interpretation.html#supporting-gis-information"><i class="fa fa-check"></i><b>5.2</b> Supporting GIS Information</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="literature.html"><a href="literature.html"><i class="fa fa-check"></i><b>6</b> Literature</a></li>
+<li class="divider"></li>
+<li><a href="https://github.com/ABbiodiversity" target="blank">Published by ABMI</a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Development of the Landscape Cnnecitivty indicator for Alberta, Canada</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="measuring-landscape-connectivity" class="section level1 hasAnchor" number="4">
+<h1><span class="header-section-number">4</span> Measuring Landscape Connectivity<a href="measuring-landscape-connectivity.html#measuring-landscape-connectivity" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<div id="aggregated-landscape-connectivity" class="section level2 hasAnchor" number="4.1">
+<h2><span class="header-section-number">4.1</span> Aggregated Landscape Connectivity<a href="measuring-landscape-connectivity.html#aggregated-landscape-connectivity" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Landscape connectivity was high in northeastern Alberta and the Rocky Mountains for all five years, as indicated by higher indicator values. On the other hand, lower connectivity values were detected in more developed areas such as the southern part of the province. Across all HUC-8 watersheds, landscape connectivity values ranged from 1.2% to 100% for all five years, with provincial averages of 35.5%, 33.7%, 33.5%, 33.4%, and 33.3% respectively, for 2010, 2018, 2019, 2020, and 2021. Results for all years are available on GeoDiscover Alberta (<a href="https://open.alberta.ca/opendata/gda-0f23e47d-fce1-4636-8760-02df5f83c18e">Landscape Connectivity Indicator for Alberta</a>).</p>
+<center>
+<div class="float">
+<img src="LandscapeConnectivity_files/figure-html/images/landscape-connectivity-in-text.png" style="width:80.0%" alt="Figure 5. Status of landscape connectivity in 2010 (left), 2021 (centre), and the percent change (right) during this period." />
+<div class="figcaption">Figure 5. Status of landscape connectivity in 2010 (left), 2021 (centre), and the percent change (right) during this period.</div>
+</div>
+</center>
+<p>Landscape connectivity declined from 2010 to 2021 for most watersheds, with an average decline of 2.24% (sd = 3.16%) across all watersheds in the province (Figure 58). Of the 422 HUC-8 watersheds, landscape connectivity increased in 24 watersheds, decreased in 394 watersheds, and was stable in 4 watersheds. For the 24 watersheds that observed increases, only 7 had increases greater than 0.5%, while the remaining 17 had increases smaller than 0.5%. Of the 394 watersheds experiencing declines, 152 experienced declines greater than 2%, and 50 experienced declines greater than 5%. For two watersheds (HUC 18040203 and HUC 19010305), indicator conditions declined more than 25% (25.5% for HUC 18040203 and 25.9% for HUC 19010305) over the 11-year period, from 64.1% to 38.6% for HUC 18040203 and from 70.6% to 44.7% for HUC 19010305.<br />
+## Landscape Connectivity for Grass-Shrub
+Landscape connectivity for Grass-Shrub was low throughout the Grassland and Parkland Natural Regions. Focusing on watersheds where Grass-Shrub were the dominant habitat type under the reference condition (66 watersheds), average connectivity was 8.25% in 2010 (sd = 10.2%) and declined to 7.1% (sd = 8.9%) in 2021. Even though some watersheds saw large declines in connectivity, these are often restricted to areas where Grass-Shrub habitats are rare. However, Grass-Shrub habitats are the least connected habitat type in the province.</p>
+<center>
+<div class="float">
+<img src="LandscapeConnectivity_files/figure-html/images/grassland-connectivity-in-text.png" style="width:80.0%" alt="Status of landscape connectivity for Grass-Shrub habitats in 2010 (left), 2021 (centre), and the percent change (right) during this period. Watersheds outlined in black represent the watersheds where Grass-Shrub is the dominant habitat type." />
+<div class="figcaption">Status of landscape connectivity for Grass-Shrub habitats in 2010 (left), 2021 (centre), and the percent change (right) during this period. Watersheds outlined in black represent the watersheds where Grass-Shrub is the dominant habitat type.</div>
+</div>
+</center>
+</div>
+<div id="landscape-connectivity-for-upland-forest" class="section level2 hasAnchor" number="4.2">
+<h2><span class="header-section-number">4.2</span> Landscape Connectivity for Upland Forest<a href="measuring-landscape-connectivity.html#landscape-connectivity-for-upland-forest" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Landscape connectivity for Upland Forest was low throughout the Parkland and sections of the Boreal Forest Natural Regions. Focusing on watersheds where Upland Forest was the dominant habitat type (259 watersheds), average connectivity was 30.8% in 2010 (sd = 32.4%) and declined to 28.9% (sd = 32.7%) in 2021.</p>
+<center>
+<div class="float">
+<img src="LandscapeConnectivity_files/figure-html/images/upland-forest-connectivity-in-text.png" style="width:80.0%" alt="Status of landscape connectivity for Upland Forest habitats in 2010 (left), 2021 (centre), and the percent change (right) during this period. Watersheds outlined in black represent the watersheds where Upland Forest is the dominant habitat type." />
+<div class="figcaption">Status of landscape connectivity for Upland Forest habitats in 2010 (left), 2021 (centre), and the percent change (right) during this period. Watersheds outlined in black represent the watersheds where Upland Forest is the dominant habitat type.</div>
+</div>
+</center>
+</div>
+<div id="landscape-connectivity-for-lowland-forest" class="section level2 hasAnchor" number="4.3">
+<h2><span class="header-section-number">4.3</span> Landscape Connectivity for Lowland Forest<a href="measuring-landscape-connectivity.html#landscape-connectivity-for-lowland-forest" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Landscape connectivity for Lowland Forest was low throughout several Natural Regions, but had pockets of relatively connected habitat. Focusing on watersheds where Lowland Forest was the dominant habitat type (97 watersheds), average connectivity was 53.2% in 2010 (sd = 25.2%) and declined to 49.8% (sd = 25.5%) in 2021. This is the most connected habitat type in the province. However, it also had the largest average decline (3.4%) in connectivity between 2010 and 2021.</p>
+<center>
+<div class="float">
+<img src="LandscapeConnectivity_files/figure-html/images/lowland-forest-connectivity-in-text.png" style="width:80.0%" alt="Status of landscape connectivity for Lowland Forest habitats in 2010 (left), 2021 (centre), and the percent change (right) during this period. Watersheds outlined in black represent the watersheds where Lowland Forest is the dominant habitat type." />
+<div class="figcaption">Status of landscape connectivity for Lowland Forest habitats in 2010 (left), 2021 (centre), and the percent change (right) during this period. Watersheds outlined in black represent the watersheds where Lowland Forest is the dominant habitat type.</div>
+</div>
+</center>
+
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="landscape-connectivity-indicator.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="interpretation.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": null,
+"text": null
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": null,
+"search": {
+"engine": "fuse",
+"options": null
+},
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>

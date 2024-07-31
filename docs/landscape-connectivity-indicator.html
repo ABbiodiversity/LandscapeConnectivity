@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+<head>
+
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>3 Landscape Connectivity Indicator | Development of the Landscape Cnnecitivty indicator for Alberta, Canada</title>
+  <meta name="description" content="Technical documentation describing the landscape connectivity indicator." />
+  <meta name="generator" content="bookdown 0.39 and GitBook 2.6.7" />
+
+  <meta property="og:title" content="3 Landscape Connectivity Indicator | Development of the Landscape Cnnecitivty indicator for Alberta, Canada" />
+  <meta property="og:type" content="book" />
+  
+  <meta property="og:description" content="Technical documentation describing the landscape connectivity indicator." />
+  
+
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="3 Landscape Connectivity Indicator | Development of the Landscape Cnnecitivty indicator for Alberta, Canada" />
+  
+  <meta name="twitter:description" content="Technical documentation describing the landscape connectivity indicator." />
+  
+
+<meta name="author" content="Brandon Allen" />
+
+
+<meta name="date" content="2024-07-31" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  
+  
+<link rel="prev" href="introduction.html"/>
+<link rel="next" href="measuring-landscape-connectivity.html"/>
+<script src="libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/fuse.js@6.4.6/dist/fuse.min.js"></script>
+<link href="libs/gitbook-2.6.7/css/style.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-table.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-bookdown.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-highlight.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-search.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-fontsettings.css" rel="stylesheet" />
+<link href="libs/gitbook-2.6.7/css/plugin-clipboard.css" rel="stylesheet" />
+
+
+
+
+
+
+
+
+<link href="libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+
+
+
+<style type="text/css">
+  
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+</style>
+<style type="text/css">
+/* Used with Pandoc 2.11+ new --citeproc when CSL is used */
+div.csl-bib-body { }
+div.csl-entry {
+  clear: both;
+}
+.hanging div.csl-entry {
+  margin-left:2em;
+  text-indent:-2em;
+}
+div.csl-left-margin {
+  min-width:2em;
+  float:left;
+}
+div.csl-right-inline {
+  margin-left:2em;
+  padding-left:1em;
+}
+div.csl-indent {
+  margin-left: 2em;
+}
+</style>
+
+<link rel="stylesheet" href="style.css" type="text/css" />
+</head>
+
+<body>
+
+
+
+  <div class="book without-animation with-summary font-size-2 font-family-1" data-basepath=".">
+
+    <div class="book-summary">
+      <nav role="navigation">
+
+<ul class="summary">
+<li><a href="./">Landscape Connectivity</a></li>
+
+<li class="divider"></li>
+<li class="chapter" data-level="1" data-path="index.html"><a href="index.html"><i class="fa fa-check"></i><b>1</b> Summary</a>
+<ul>
+<li class="chapter" data-level="1.1" data-path="index.html"><a href="index.html#supporting-information"><i class="fa fa-check"></i><b>1.1</b> Supporting Information</a></li>
+<li class="chapter" data-level="1.2" data-path="index.html"><a href="index.html#acknowledgement"><i class="fa fa-check"></i><b>1.2</b> Acknowledgement</a></li>
+<li class="chapter" data-level="1.3" data-path="index.html"><a href="index.html#suggested-citation"><i class="fa fa-check"></i><b>1.3</b> Suggested citation</a></li>
+<li class="chapter" data-level="1.4" data-path="index.html"><a href="index.html#contact"><i class="fa fa-check"></i><b>1.4</b> Contact</a></li>
+</ul></li>
+<li class="chapter" data-level="2" data-path="introduction.html"><a href="introduction.html"><i class="fa fa-check"></i><b>2</b> Introduction</a>
+<ul>
+<li class="chapter" data-level="2.1" data-path="introduction.html"><a href="introduction.html#what-is-connectivity"><i class="fa fa-check"></i><b>2.1</b> What is connectivity?</a></li>
+<li class="chapter" data-level="2.2" data-path="introduction.html"><a href="introduction.html#how-can-it-be-measured"><i class="fa fa-check"></i><b>2.2</b> How can it be measured?</a></li>
+</ul></li>
+<li class="chapter" data-level="3" data-path="landscape-connectivity-indicator.html"><a href="landscape-connectivity-indicator.html"><i class="fa fa-check"></i><b>3</b> Landscape Connectivity Indicator</a>
+<ul>
+<li class="chapter" data-level="3.1" data-path="landscape-connectivity-indicator.html"><a href="landscape-connectivity-indicator.html#gis-layers"><i class="fa fa-check"></i><b>3.1</b> GIS Layers</a></li>
+<li class="chapter" data-level="3.2" data-path="landscape-connectivity-indicator.html"><a href="landscape-connectivity-indicator.html#key-parameters"><i class="fa fa-check"></i><b>3.2</b> Key Parameters</a>
+<ul>
+<li class="chapter" data-level="3.2.1" data-path="landscape-connectivity-indicator.html"><a href="landscape-connectivity-indicator.html#dispersal"><i class="fa fa-check"></i><b>3.2.1</b> Dispersal</a></li>
+<li class="chapter" data-level="3.2.2" data-path="landscape-connectivity-indicator.html"><a href="landscape-connectivity-indicator.html#cost-distance"><i class="fa fa-check"></i><b>3.2.2</b> Cost distance</a></li>
+<li class="chapter" data-level="3.2.3" data-path="landscape-connectivity-indicator.html"><a href="landscape-connectivity-indicator.html#minimum-viable-patch-size"><i class="fa fa-check"></i><b>3.2.3</b> Minimum viable patch size</a></li>
+<li class="chapter" data-level="3.2.4" data-path="landscape-connectivity-indicator.html"><a href="landscape-connectivity-indicator.html#reference-condition"><i class="fa fa-check"></i><b>3.2.4</b> Reference condition</a></li>
+<li class="chapter" data-level="3.2.5" data-path="landscape-connectivity-indicator.html"><a href="landscape-connectivity-indicator.html#recovery-of-forest-harvest-areas"><i class="fa fa-check"></i><b>3.2.5</b> Recovery of forest harvest areas</a></li>
+</ul></li>
+</ul></li>
+<li class="chapter" data-level="4" data-path="measuring-landscape-connectivity.html"><a href="measuring-landscape-connectivity.html"><i class="fa fa-check"></i><b>4</b> Measuring Landscape Connectivity</a>
+<ul>
+<li class="chapter" data-level="4.1" data-path="measuring-landscape-connectivity.html"><a href="measuring-landscape-connectivity.html#aggregated-landscape-connectivity"><i class="fa fa-check"></i><b>4.1</b> Aggregated Landscape Connectivity</a></li>
+<li class="chapter" data-level="4.2" data-path="measuring-landscape-connectivity.html"><a href="measuring-landscape-connectivity.html#landscape-connectivity-for-upland-forest"><i class="fa fa-check"></i><b>4.2</b> Landscape Connectivity for Upland Forest</a></li>
+<li class="chapter" data-level="4.3" data-path="measuring-landscape-connectivity.html"><a href="measuring-landscape-connectivity.html#landscape-connectivity-for-lowland-forest"><i class="fa fa-check"></i><b>4.3</b> Landscape Connectivity for Lowland Forest</a></li>
+</ul></li>
+<li class="chapter" data-level="5" data-path="interpretation.html"><a href="interpretation.html"><i class="fa fa-check"></i><b>5</b> Interpretation</a>
+<ul>
+<li class="chapter" data-level="5.1" data-path="interpretation.html"><a href="interpretation.html#limitations"><i class="fa fa-check"></i><b>5.1</b> Limitations</a></li>
+<li class="chapter" data-level="5.2" data-path="interpretation.html"><a href="interpretation.html#supporting-gis-information"><i class="fa fa-check"></i><b>5.2</b> Supporting GIS Information</a></li>
+</ul></li>
+<li class="chapter" data-level="6" data-path="literature.html"><a href="literature.html"><i class="fa fa-check"></i><b>6</b> Literature</a></li>
+<li class="divider"></li>
+<li><a href="https://github.com/ABbiodiversity" target="blank">Published by ABMI</a></li>
+
+</ul>
+
+      </nav>
+    </div>
+
+    <div class="book-body">
+      <div class="body-inner">
+        <div class="book-header" role="navigation">
+          <h1>
+            <i class="fa fa-circle-o-notch fa-spin"></i><a href="./">Development of the Landscape Cnnecitivty indicator for Alberta, Canada</a>
+          </h1>
+        </div>
+
+        <div class="page-wrapper" tabindex="-1" role="main">
+          <div class="page-inner">
+
+            <section class="normal" id="section-">
+<div id="landscape-connectivity-indicator" class="section level1 hasAnchor" number="3">
+<h1><span class="header-section-number">3</span> Landscape Connectivity Indicator<a href="landscape-connectivity-indicator.html#landscape-connectivity-indicator" class="anchor-section" aria-label="Anchor link to header"></a></h1>
+<div id="gis-layers" class="section level2 hasAnchor" number="3.1">
+<h2><span class="header-section-number">3.1</span> GIS Layers<a href="landscape-connectivity-indicator.html#gis-layers" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>The following GIS layers were used to delineate native habitat:</p>
+<ol style="list-style-type: decimal">
+<li><p><strong>ABMI Wall-to-Wall Vegetation Layer Including “Backfilled” Vegetation</strong> is a provincial scale <a href="https://abmi.ca/home/publications/451-500/467">GIS layer</a> that tracks the current vegetation, habitat, soil, and anthropogenic disturbances. This layer allowed us to assign habitat types (Upland Forest, Lowland Forest, and Grass-Shrub) and stand types for harvest areas which can be used to incorporate forest recovery curves for deciduous and coniferous stands. In addition, this layer provides information on the landcover types present prior to disturbance (i.e., backfill layer) which is used to determine the reference condition. We used version 7.0 of this layer (release date TBD), but it follows the same methodology as the cited version (6.0).</p></li>
+<li><p><strong>Wildlife crossing locations in National Parks </strong> is a dataset on wildlife crossing locations was provided by Parks Canada that included information about where crossing infrastructures, such as overpasses and box culverts, occur in National Parks. This type of infrastructure can facilitate movement between habitat patches, reducing the impact of road development on connectivity.</p></li>
+<li><p><strong>The Human Footprint Inventory</strong> is a provincial scale <a href="https://www.abmi.ca/home/data-analytics/da-top/da-product-overview/Human-Footprint-Products/HF-inventory.html">GIS layer</a> that consolidates 115 types of anthropogenic disturbance into 20 subcategories. This layer allowed us to determine the loss of native habitat due to anthropogenic disturbance.</p></li>
+<li><p><strong>Hierarchical Watershed Boundaries of Alberta</strong> The Hydrologic Unit Code Watersheds of Alberta layer allows us to aggregate the status of AWNC and TNC based on ecologically relevant boundaries (<a href="https://open.alberta.ca/opendata/gda-7857b6fb-96c5-4bc5-ac3a-9017778fd183">Hydrologic Unit Code Watersheds of Alberta</a>). We chose to aggregate the information at the HUC-8 watershed scale. Each HUC-8 watershed contains both AWNC and TNC, with TNC ranging between 3.5% to 94% across watersheds. However, these indicators can be reported at alternative spatial scales.</p></li>
+</ol>
+</div>
+<div id="key-parameters" class="section level2 hasAnchor" number="3.2">
+<h2><span class="header-section-number">3.2</span> Key Parameters<a href="landscape-connectivity-indicator.html#key-parameters" class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>There are five key parameters for calculating the ECA index:</p>
+<ul>
+<li><p>Dispersal distance: 250 m, representing how far a species can disperse.</p></li>
+<li><p>Cost distance: 1 to 10, represents a scale for how difficult it is to move through the landscape.</p></li>
+<li><p>Minimum viable patch size: one hectare.</p></li>
+<li><p>Reference condition: landscape condition without any human footprint.</p></li>
+<li><p>Recovery of forest harvest areas: harvest areas recover over time, and full recovery is achieved at stand age 80.</p></li>
+</ul>
+<div id="dispersal" class="section level3 hasAnchor" number="3.2.1">
+<h3><span class="header-section-number">3.2.1</span> Dispersal<a href="landscape-connectivity-indicator.html#dispersal" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>Different species have different dispersal capacities and thus different dispersal thresholds (e.g., maximum reachable distance within habitat). As a species’ dispersal capability increases, the ECA index converges with the proportion of available native habitat. In contrast, for small dispersal distance the ECA index will approach zero as species will be unable to move across even the smallest disturbances. Nevertheless, from an ecological perspective, some species may have very small dispersal distances and could still move very short distances in the landscape. However, from an application perspective, if the index converges to 0, it provides few opportunities for the index to provide meaningful information to land-use managers. Therefore, we needed to strike a balance between the index converging to the same value as percent native cover or converging to zero (i.e., no room for management action or prioritization).</p>
+<center>
+<div class="float">
+<img src="LandscapeConnectivity_files/figure-html/images/dispersal-landscape-simulation.png" style="width:80.0%" alt="Relationship between the ECA index and percent native cover for multiple dispersal distances (m)" />
+<div class="figcaption">Relationship between the ECA index and percent native cover for multiple dispersal distances (m)</div>
+</div>
+</center>
+<p>Although we adopted a structural connectivity approach that is species agnostic, an assumption about dispersal threshold is still needed to be able to calculate connectivity among habitat patches. We chose to adopt a low dispersal distance of 250m so the indicator would be sensitive to species with dispersal limitations. If landscape connectivity is maintained for species with limited dispersal ability, species with much larger dispersal abilities will also be conserved. To apply the dispersal distance for calculating the Landscape Connectivity indicator, we followed an approach by <span class="citation">Blake (<a href="#ref-BlakeBaarda2018">2018</a>)</span> and assigned the dispersal distance as the maximum distance of direct dispersal for the majority of species (95%) and twice the dispersal distance (500 m) for the remaining 5% of the species. This means that species have a 5% probability of direct dispersal to another patch 250 m away. It is important to acknowledge that rare long distance dispersal events occur. However, a maximum cut-off value is required to make the indicator computation feasible. Therefore, when calculating the Euclidean distance between two habitat patches, patches would have a 0% probability of direct dispersal if they were more than twice the dispersal distance (500 m) apart <span class="citation">(<a href="#ref-BlakeBaarda2018">Blake 2018</a>)</span>. It is important to note that this maximum cut-off value does not limit the ability of species to move large distances within a watershed by moving through multiple native habitat patches that are close together (e.g., as steppingstones).</p>
+</div>
+<div id="cost-distance" class="section level3 hasAnchor" number="3.2.2">
+<h3><span class="header-section-number">3.2.2</span> Cost distance<a href="landscape-connectivity-indicator.html#cost-distance" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>The ECA index has the flexibility to weigh the connections (i.e., links) between viable patches (i.e., nodes) based on the Euclidean distance between edges of patches, and the predicted cost (i.e., resistance) human footprint features or native landcover types exert on species. We drew on two published studies to assign cost values. <span class="citation">Marrec (<a href="#ref-Marrec2020">2020</a>)</span> developed a set of cost values for human footprint features based on the 2014 Human Footprint Inventory. The relative values of human modification, ranging between 0–1, were rescaled between 1–10 to allow for these costs to impact connectivity within a watershed, while acknowledging its impact should be secondary to the effects of habitat loss <a href="ADD%20TECHNICAL%20DOCUMENT%20URL">(Table 3 layer)</a>. Cost values of 1 indicate there is no additional cost to move between patches on top of the Euclidian distance between them, while a cost of 10 indicates it is 10 times more difficult to move between patches. To account for the variation in the degree of anthropogenic disturbances between forested (e.g., Green Area) and urbanized and agricultural (White Area) parts of the province <span class="citation">(<a href="#ref-GoA2022">Alberta 2022</a>)</span>, we used the cost values developed for the forested area of the province for Upland Forest and Lowland Forest habitats and the values developed for the agricultural region for Grass-Shrub habitats.</p>
+<p>For native habitat types, we used cost values developed by <span class="citation">Blake (<a href="#ref-BlakeBaarda2018">2018</a>)</span> <a href="ADD%20TECHNICAL%20DOCUMENT%20URL">(Table 4 layer)</a>. Each habitat type has unique cost values associated with dispersing through unlike habitats (i.e., Grass-Shrub habitats dispersing through Upland Forest habitats had a lower cost than moving through Lowland Forest habitats). For open water and bare ground habitat types, we chose to use the maximum cost value of 10. This value was chosen because these habitat types are generally unsuitable for the terrestrial species represented by our 250 m dispersal distance (e.g., vascular plants, and invertebrates). It is important to note that the majority of open water and bare habitat types remain consistent in both the current and reference landscapes, or transition to footprint types that also have the maximum cost value. Only 0.05% of the landcover in Alberta, about 340 km2, transitions from the maximum cost value in the reference landscape to a lower cost value under current conditions. Therefore, the assignment of these cost values for open water and bare ground habitats should have minimal impact on the final indicator value.</p>
+<p>It is computationally intensive to determine the least-cost path between all viable habitat patches. This could make it difficult to incorporate this indicator into management practices. Therefore, we calculated cost distances using a 10 m raster and then calculated the average value for each HUC-8 watershed. It has been shown that using an average cost value results in less than a 1% difference in overall connectivity while significantly reducing the computational costs <span class="citation">(<a href="#ref-Saura2011">Saura et al. 2011</a>)</span>. The mean cost value for each HUC-8 watershed is calculated using both the backfilled reference condition and the appropriate Human Footprint Inventory (e.g., 2010, 2018, 2019, 2020, or 2021).</p>
+</div>
+<div id="minimum-viable-patch-size" class="section level3 hasAnchor" number="3.2.3">
+<h3><span class="header-section-number">3.2.3</span> Minimum viable patch size<a href="landscape-connectivity-indicator.html#minimum-viable-patch-size" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>Every species requires a minimum amount of habitat to support aspects of their ecology (e.g., foraging and breeding). The amount of area required can range from a few square centimeters (e.g., microhabitats; moss on a decaying log), to very large areas that support larger organisms with bigger dispersal capabilities (e.g., large mammals). This range in variation makes it challenging to choose a minimum viable patch size that is meaningful across multiple species.</p>
+<p>Using guidance from both the NatureServe Conservation Status Assessment <span class="citation">(<a href="#ref-Master2021">Master L and A 2012</a>)</span> and landscape disturbance simulations, we chose a minimum patch size of one hectare (0.01 km2). Setting a minimum viable patch size that is relatively small provides several key benefits:</p>
+<ul>
+<li><p>Allows the indicator to be responsive to new disturbance in small (but greater than 1 ha) native habitat patches compared to a larger minimum viable patch size,</p></li>
+<li><p>Prevents the indicator from converging rapidly to zero under varying amounts of human disturbance (Figure 21) compared to a larger minimum viable patch size, and</p></li>
+<li><p>Reduces the computational resources required for this indicator as we ensure that polygon slivers are not considered as habitat patches compared to not having a minimum viable patch size.</p></li>
+</ul>
+<center>
+<div class="float">
+<img src="LandscapeConnectivity_files/figure-html/images/patch-size-landscape-simulation.png" style="width:80.0%" alt="Response of the ECA index as we increase the minimum viable patch size under multiple levels of landscape disturbance." />
+<div class="figcaption">Response of the ECA index as we increase the minimum viable patch size under multiple levels of landscape disturbance.</div>
+</div>
+</center>
+<p>We acknowledge that this minimum viable patch size does not represent all species. However, from the perspective of land-use planning, using a single minimum viable patch size allows for robust comparisons across regions.</p>
+</div>
+<div id="reference-condition" class="section level3 hasAnchor" number="3.2.4">
+<h3><span class="header-section-number">3.2.4</span> Reference condition<a href="landscape-connectivity-indicator.html#reference-condition" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>We calculated the ECA index for multiple time steps (2010, 2018, 2019, 2020 and 2021) compared to a reference condition. The reference condition represents the state of the landscape in the absence of human footprint (i.e., backfilled layer), not a pre-colonialization landscape condition. In short, this is derived by filling in human footprint based on neighbouring native vegetation. The backfilled condition allows us to isolate the impacts of anthropogenic disturbance from other natural changes to landcover types over time.</p>
+<center>
+<div class="float">
+<img src="LandscapeConnectivity_files/figure-html/images/habitat-area.png" style="width:80.0%" alt="Percent areas of the three habitat types: (left), Lowland Forest (centre), and Grass-Shrub (right) within each HUC-8 watershed under the reference condition. Upland Forest habitat type includes various upland forest types (coniferous, deciduous and mixedwood forests), Lowland Forest habitat type includes wetlands (treed and shrubby fens, bogs, swamps), and Grass-Shrub habitat type represents grass and shrub habitats in southern Alberta." />
+<div class="figcaption">Percent areas of the three habitat types: (left), Lowland Forest (centre), and Grass-Shrub (right) within each HUC-8 watershed under the reference condition. Upland Forest habitat type includes various upland forest types (coniferous, deciduous and mixedwood forests), Lowland Forest habitat type includes wetlands (treed and shrubby fens, bogs, swamps), and Grass-Shrub habitat type represents grass and shrub habitats in southern Alberta.</div>
+</div>
+</center>
+</div>
+<div id="recovery-of-forest-harvest-areas" class="section level3 hasAnchor" number="3.2.5">
+<h3><span class="header-section-number">3.2.5</span> Recovery of forest harvest areas<a href="landscape-connectivity-indicator.html#recovery-of-forest-harvest-areas" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<p>Applying recovery to harvest areas when calculating current conditions gives a more realistic representation of how harvest areas interact with the surrounding ecosystem. It is well known in the scientific literature that forest harvesting, particularly clearcut harvesting, differs from wildfire in their impacts on biodiversity <span class="citation">McRae et al. (<a href="#ref-McRae2001">2001</a>)</span>. Although harvest areas provide habitat for some species, they are not equivalent to post-fire forest stands of the same age. However, forest harvest areas do recover over time, and recovery curves recommended by <span class="citation">Huggard and Kremsater (<a href="#ref-Huggard2015">2015</a>)</span> for deciduous and coniferous forest types were applied when calculating the conditions of the AWNC and TNC indicators. These recovery curves were simplified to a single recovery curve to allow the AWNC and TNC indicators to be calculated using only publicly available GIS layers.</p>
+<center>
+<div class="float">
+<img src="LandscapeConnectivity_files/figure-html/images/forest-recovery-curves.png" style="width:80.0%" alt="Forest recovery curves as described by Kremsater et al., 2015" />
+<div class="figcaption">Forest recovery curves as described by Kremsater et al., 2015</div>
+</div>
+</center>
+
+</div>
+</div>
+</div>
+<h3> Literature<a href="literature.html#literature" class="anchor-section" aria-label="Anchor link to header"></a></h3>
+<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-GoA2022" class="csl-entry">
+Alberta, Government of. 2022. <span>“Green Area and White Area with National Parks and Forest Management Units.”</span> <a href="https://open.alberta.ca/publications/green-and-white-area-with-national-parks-and-fmus">https://open.alberta.ca/publications/green-and-white-area-with-national-parks-and-fmus</a>.
+</div>
+<div id="ref-BlakeBaarda2018" class="csl-entry">
+Blake, Baarda, D. 2018. <span>“Developing a Habitat Connectivity Indicator for Scotland.”</span> <em>Nature</em>. <a href="https://doi.org/10.1038/23028">https://doi.org/10.1038/23028</a>.
+</div>
+<div id="ref-Huggard2015" class="csl-entry">
+Huggard, D, and L Kremsater. 2015. <span>“<a href="">Human Footprint Recovery for the Biodiversity Monitoring Framework - Quantitative Synthesis</a>.”</span>
+</div>
+<div id="ref-Marrec2020" class="csl-entry">
+Marrec, Abdel Moniem, R. 2020. <span>“Conceptual Framework and Uncertainty Analysis for Large-Scale, Species-Agnostic Modelling of Landscape Connectivity Across Alberta, Canada.”</span> <em>Scientific Reports</em> 10 (6798). https://doi.org/<a href="https://doi.org/10.1038/s41598-020-63545-z">https://doi.org/10.1038/s41598-020-63545-z</a>.
+</div>
+<div id="ref-Master2021" class="csl-entry">
+Master L, Bittman R, Faber-Langendoen D, and Tomaino A. 2012. <span>“NatureServe Conservation Status Assessments: Factors for Evaluating Species and Ecosystem Risk.”</span> <a href="https://www.natureserve.org/publications/natureserve-conservation-status-assessments-factors-evaluating-species-and-ecosystem">https://www.natureserve.org/publications/natureserve-conservation-status-assessments-factors-evaluating-species-and-ecosystem</a>.
+</div>
+<div id="ref-McRae2001" class="csl-entry">
+McRae, D J, L C Duchesne, B Freedman, T J Lynham, and S Woodley. 2001. <span>“Comparisons Between Wildfire and Forest Harvesting and Their Implications in Forest Management.”</span> <em>Environmental Reviews</em> 9 (4): 223–60. <a href="https://doi.org/10.1139/a01-010">https://doi.org/10.1139/a01-010</a>.
+</div>
+<div id="ref-Saura2011" class="csl-entry">
+Saura, Santiago, Christine Estreguil, Coralie Mouton, and Mónica Rodríguez-Freire. 2011. <span>“Network Analysis to Assess Landscape Connectivity Trends: Application to European Forests (1990–2000).”</span> <em>Ecological Indicators</em> 11 (2): 407–16. https://doi.org/<a href="https://doi.org/10.1016/j.ecolind.2010.06.011">https://doi.org/10.1016/j.ecolind.2010.06.011</a>.
+</div>
+</div>
+            </section>
+
+          </div>
+        </div>
+      </div>
+<a href="introduction.html" class="navigation navigation-prev " aria-label="Previous page"><i class="fa fa-angle-left"></i></a>
+<a href="measuring-landscape-connectivity.html" class="navigation navigation-next " aria-label="Next page"><i class="fa fa-angle-right"></i></a>
+    </div>
+  </div>
+<script src="libs/gitbook-2.6.7/js/app.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/clipboard.min.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-search.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-sharing.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-fontsettings.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-bookdown.js"></script>
+<script src="libs/gitbook-2.6.7/js/jquery.highlight.js"></script>
+<script src="libs/gitbook-2.6.7/js/plugin-clipboard.js"></script>
+<script>
+gitbook.require(["gitbook"], function(gitbook) {
+gitbook.start({
+"sharing": {
+"github": false,
+"facebook": true,
+"twitter": true,
+"linkedin": false,
+"weibo": false,
+"instapaper": false,
+"vk": false,
+"whatsapp": false,
+"all": ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+},
+"fontsettings": {
+"theme": "white",
+"family": "sans",
+"size": 2
+},
+"edit": {
+"link": null,
+"text": null
+},
+"history": {
+"link": null,
+"text": null
+},
+"view": {
+"link": null,
+"text": null
+},
+"download": null,
+"search": {
+"engine": "fuse",
+"options": null
+},
+"toc": {
+"collapse": "subsection"
+}
+});
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    var src = "true";
+    if (src === "" || src === "true") src = "https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.9/latest.js?config=TeX-MML-AM_CHTML";
+    if (location.protocol !== "file:")
+      if (/^https?:/.test(src))
+        src = src.replace(/^https?:/, '');
+    script.src = src;
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+</body>
+
+</html>
