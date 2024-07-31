@@ -5,8 +5,5 @@
 beta/**
 data/**
 results/**
-docs/**
 bookdown/**
-/data/base/ 
-/data/processed/ 
-/beta/
+
