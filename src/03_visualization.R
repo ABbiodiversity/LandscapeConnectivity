@@ -1,7 +1,7 @@
 #
 # Title: Visualization of landscape connectivity
 # Created: October 11th, 2022
-# Last Updated: July 30th, 2024
+# Last Updated: August 1st, 2024
 # Author: Brandon Allen
 # Objectives: Visualize the landscape connectivity indicator.
 # Keywords: Notes, Connectivity, Resistance, Forest recovery
@@ -154,7 +154,7 @@ ggsave(filename = "results/figures/indicator/landscape-connectivity-appendix.png
 
 connect.2010.2021 <- difference_plot(data.in = total.trend, 
                                      habitat = "Difference", 
-                                     title = "")
+                                     title = "Connectivity Change")
 
 ggsave(filename = "results/figures/indicator/landscape-connectivity-in-text.png",
        plot = ggarrange(connect.2010, connect.2021, connect.2010.2021,
@@ -221,11 +221,11 @@ ggsave(filename = "results/figures/indicator/upland-forest-connectivity-appendix
 
 connect.2010.2021 <- difference_plot(data.in = upland.trend, 
                                      habitat = "Difference", 
-                                     title = "")
+                                     title = "Connectivity Change")
 
 upland.area <- area_plot(data.in = upland.trend, 
                           habitat = "Area", 
-                          title = "")
+                          title = "Upland Forest")
 
 # Define the outline of specific regions
 subset <- connectivity.results[connectivity.results$HUC_8 %in% connectivity.results$HUC_8[connectivity.results$LandcoverDominant == "UplandForest"], ]
@@ -323,11 +323,11 @@ ggsave(filename = "results/figures/indicator/lowland-forest-connectivity-appendi
 
 connect.2010.2021 <- difference_plot(data.in = lowland.trend, 
                                      habitat = "Difference", 
-                                     title = "")
+                                     title = "Connectivity Change")
 
 lowland.area <- area_plot(data.in = lowland.trend, 
                           habitat = "Area", 
-                          title = "")
+                          title = "Lowland Forest")
 
 
 # Define the outline of specific regions
@@ -427,11 +427,11 @@ ggsave(filename = "results/figures/indicator/grassland-connectivity-appendix.png
 
 connect.2010.2021 <- difference_plot(data.in = grassland.trend, 
                                      habitat = "Difference", 
-                                     title = "")
+                                     title = "Connectivity Change")
 
 grass.area <- area_plot(data.in = grassland.trend, 
                           habitat = "Area", 
-                          title = "")
+                          title = "Grass-Shrub")
 
 
 # Define the outline of specific regions
