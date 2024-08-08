@@ -1,0 +1,19 @@
+# Interpretation 
+
+There are two main factors that can result in lower landscape connectivity. The first factor is the direct loss of habitat. As we are comparing current landscape connectivity to those under a reference condition, any direct loss of habitat results in a lower connectivity. This is true even if the remaining habitat under current conditions is clumped together (i.e., highly connected within the remaining fragments of habitat).  
+
+The second factor is the fragmentation of habitat patches. There are disturbances, such as linear features, that are more likely to fragment habitat patches. Even though these features have a small direct effect on habitat removal, they can increase the number of habitat patches in a region. This means species are no longer able to disperse through a singular large habitat patch, but instead must cross multiple human footprint features to reach the same location. Even if a species has a high probability of successfully dispersing across a single footprint feature (e.g., 90%), the cumulative impact of having to cross multiple features (e.g., 10 features) results in a low probability of success ($0.9^10 * 100% = 34.9% Success$). This cumulative impact of fragmenting footprint features can create situations where landscape connectivity is low despite having large amounts of native habitat. These situations show how the landscape connectivity index provides novel information about the impacts of footprint outside of the direct loss of habitat. 
+
+## Limitations  
+
+All indicators, as representations of a component of the environment, have limitations. A single indicator cannot measure all aspects of habitat quantity and/or quality. The Landscape Connectivity indicator is intended to serve as a general indicator of habitat connectivity at the regional and sub-regional levels. As such, we acknowledge and accept limitations associated with the indicator: 
+
+- This indicator does not capture the connectivity of migratory species or identify specific connectivity corridors. The ECA index was calculated within HUC-8 watersheds. 
+
+- Species range in their abilities to disperse and colonize habitats. While this indicator is intended to represent landscape connectivity for a large suite of species, it will not capture all species.  
+
+- Recovery of human footprint is only incorporated for forest harvest areas through recovery curves and for those features that have been reclaimed and are no longer present in the Human Footprint Inventory. 
+
+## Supporting GIS Information 
+
+The Landscape Connectivity indicator layer is available on GeoDiscover Alberta ([Landscape Connectivity Indicator for Alberta](https://open.alberta.ca/opendata/gda-0f23e47d-fce1-4636-8760-02df5f83c18e)). The layer presents aggregated landscape connectivity values and landscape connectivity for Upland Forest, Lowland Forest and Grass-Shrub for HUC-8 watersheds in Alberta over a time series (2010, 2018, 2019, 2020, 2021). Table 5 describes the attributes associated with the published data layer. Note that if a particular habitat type is not present in a HUC-8 watershed, the connectivity value is coded as -9999 for all time steps. 

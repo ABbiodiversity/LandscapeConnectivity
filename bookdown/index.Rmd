@@ -1,0 +1,43 @@
+--- 
+title: "Development of the Landscape Cnnecitivty indicator for Alberta, Canada"
+author: "Brandon Allen"
+date: "`r Sys.Date()`"
+site: bookdown::bookdown_site
+documentclass: book
+bibliography: [book.bib, packages.bib]
+biblio-style: apalike
+link-citations: yes
+always_allow_html: true
+description: "Technical documentation describing the landscape connectivity indicator."
+---
+
+# Summary
+
+Alberta Environment and Protected Areas and the Alberta Biodiversity Monitoring Institute (ABMI) jointly developed a series of provincial indicators to estimate the status of biodiversity in the province. Among these indicators, Landscape Connectivity is an important indicator that quantifies the degree of connectivity of natural habitat patches. The indicator can be applied at different spatial scales, from the entire province to a local area where input data are available.
+
+The Landscape Connectivity indicator captures information about the amount of undisturbed landcover and its configuration across the landscape. An Equivalent Connected Area index was selected to measure landscape connectivity and assess changes in landscape connectivity over time. The indicator accounts for three broad landcover types: 
+
+- Upland Forest (e.g., deciduous, pine, and white spruce stands).
+- Lowland Forest (including bogs, fens, swamps, and marshes).
+- Grass-Shrub.
+
+## Supporting Information
+
+This repository contains the R code (**src/**) required for reproducing the results presented on [GeoDiscover Alberta](https://open.alberta.ca/opendata/gda-0f23e47d-fce1-4636-8760-02df5f83c18e). The Landscape Connectivity Indicator for Alberta is a geospatial product that presents the status of Upland Forests, Lowland Forests, Grass-shrub habitat, and a composite indicator for all HUC 8 watersheds in Alberta at five time steps: 2010, 2018, 2019, 2020, and 2021. Technical documentation describing the methodology and underlying data layers for this indicator can also be found on [GeoDiscover Alberta](TBD). 
+
+## Acknowledgement
+
+We would like to acknowledge that this work would not be possible without the dedication of staff from both the Government of Alberta and ABMI.
+
+## Suggested citation
+
+Alberta Biodiversity Monitoring Institute. 2024. Development of the Landscape Connectivity indicator for Alberta, Canada. Alberta Biodiversity Monitoring Institute, Alberta, Canada. (https://abbiodiversity.github.io/LandscapeConnectivity/)
+
+## Contact
+
+All questions related to this document, acquiring raw data, or the available scripts, please contact Brandon Allen (brandon.allen@ualberta.ca).
+
+<center>
+![](LandscapeConnectivity_files/figure-html/logo/ABMI-Horizontal-FullColour.png){width=80%}
+
+</center>

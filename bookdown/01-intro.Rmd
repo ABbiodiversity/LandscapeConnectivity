@@ -1,0 +1,19 @@
+# Introduction
+
+## What is connectivity?
+
+Landscape connectivity represents the degree to which landscape composition (including both native (i.e., natural) and anthropogenic (i.e., human-caused) disturbances) and configuration impact the ability of organisms to move between suitable habitat patches [@Taylor1993; @BlakeBaarda2018]. 
+
+## How can it be measured?
+
+There are three main approaches for quantifying landscape connectivity [@Calabrese2004]: 
+
+**Structural connectivity:** This can be determined from physical attributes in the landscape, and based on maps alone (i.e., without reference to movement behaviour of a single species). 
+
+**Potential functional connectivity:** This is determined using assumptions on organismal movement behaviour (e.g., by mapping a single species’ habitat and setting dispersal thresholds). 
+
+**Actual functional connectivity:** This is determined using observed data (e.g., species occupancy, radio tracking, mark-recapture, or molecular genetic data), which reflect actual rates of the exchange of organisms (or genes) among habitat patches. 
+
+The Equivalent Connected Area (ECA; structural connectivity) index was selected as the metric for the Landscape Connectivity indicator. Landscape connectivity was calculated for three broad habitat types: Upland Forest, Lowland Forest, and Grass-Shrub. We also aggregated the three habitat classes to create a composite indicator of landscape connectivity.  
+
+ 
