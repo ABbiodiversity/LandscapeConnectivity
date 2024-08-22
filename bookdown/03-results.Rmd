@@ -9,6 +9,7 @@ Landscape connectivity was high in northeastern Alberta and the Rocky Mountains 
 </center>
 
 Landscape connectivity declined from 2010 to 2021 for most watersheds, with an average decline of 2.24% (sd = 3.16%) across all watersheds in the province (Figure 58). Of the 422 HUC-8 watersheds, landscape connectivity increased in 24 watersheds, decreased in 394 watersheds, and was stable in 4 watersheds. For the 24 watersheds that observed increases, only 7 had increases greater than 0.5%, while the remaining 17 had increases smaller than 0.5%. Of the 394 watersheds experiencing declines, 152 experienced declines greater than 2%, and 50 experienced declines greater than 5%. For two watersheds (HUC 18040203 and HUC 19010305), indicator conditions declined more than 25% (25.5% for HUC 18040203 and 25.9% for HUC 19010305) over the 11-year period, from 64.1% to 38.6% for HUC 18040203 and from 70.6% to 44.7% for HUC 19010305.  
+
 ## Landscape Connectivity for Grass-Shrub
 Landscape connectivity for Grass-Shrub was low throughout the Grassland and Parkland Natural Regions. Focusing on watersheds where Grass-Shrub were the dominant habitat type under the reference condition (66 watersheds), average connectivity was 8.25% in 2010 (sd = 10.2%) and declined to 7.1% (sd = 8.9%) in 2021. Even though some watersheds saw large declines in connectivity, these are often restricted to areas where Grass-Shrub habitats are rare. However, Grass-Shrub habitats are the least connected habitat type in the province. 
 
