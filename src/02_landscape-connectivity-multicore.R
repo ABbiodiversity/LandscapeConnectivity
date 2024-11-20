@@ -1,14 +1,14 @@
 #
 # Title: Calculation of landscape connectivity (Multicore)
 # Created: February 9th, 2022
-# Last Updated: October 16th, 2023
+# Last Updated: November 19th, 2024
 # Author: Brandon Allen
 # Objectives: Process the cleaned GIS files for the connectivity index
 # Keywords: Notes, Multi-class Landscape Connectivity, Visualization
 #
 
 #########
-# Notes #
+# Notes # 
 #########~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 #
 # 1) This analysis is run for each HUC 8 across the province.
@@ -25,6 +25,7 @@ rm(list=ls())
 gc()
 
 # Load libraries and source functions
+library(foreach)
 library(parallel)
 library(sf)
 
@@ -59,7 +60,7 @@ results.reference <- list()
 # Define the cores for parallel processing
 n.clusters <- 14
 core.input <- makeCluster(n.clusters)
-clusterExport(core.input, c("dispersal.distance", "dispersal.threshold", "minimum.patch.size", 
+clusterExport(core.input, c("dispersal.distance", "dispersal.threshold", "minimum.patch.size", "recovery.curve",
                             "huc.unit", "HFI", "watershed.costs", "data_prep", "landscape_connectivity"))
 clusterEvalQ(core.input, {
   
@@ -90,136 +91,72 @@ clusterEvalQ(core.input, {
   
 })
 
+#################
+# Data cleaning #
+#################
+
 # Prepare the native layers based on dispersal distance
 # This is separated into two loops in case a landcover is present in reference, but completely removed under current conditions.
 
-###########
-# Current #
-###########
+foreach(landscape.status = c("Current", "Reference")) %dopar% 
+  
+  parLapply(core.input, 
+            as.list(watershed.ids), 
+            fun = function(HUC) tryCatch(data_prep(status = landscape.status,
+                                                   dispersal.distance = dispersal.distance,
+                                                   minimum.patch.size = minimum.patch.size, 
+                                                   harvest.recovery = recovery.curve,
+                                                   HUC.scale = huc.unit,
+                                                   HUC.id = HUC,
+                                                   HFI.year = HFI,
+                                                   arcpy = arcpy), error = function(e) e)
+  )
 
-start.time <- Sys.time()
+########################
+# Current Connectivity #
+########################
 
-# Clean the landscapes
-parLapply(core.input, 
-          as.list(watershed.ids), 
-          fun = function(HUC) tryCatch(data_prep(status = "Current",
-                                                 dispersal.distance = dispersal.distance,
-                                                 minimum.patch.size = minimum.patch.size, 
-                                                 harvest.recovery = recovery.curve,
-                                                 HUC.scale = huc.unit,
-                                                 HUC.id = HUC,
-                                                 HFI.year = HFI,
-                                                 arcpy = arcpy), error = function(e) e)
-)
+results.current <- foreach(native.class = c("Grassland", "LowlandForest", "UplandForest"),
+                           .final = function(x) setNames(x, c("Grassland", "LowlandForest", "UplandForest"))) %dopar% {
+                             
+                             parLapply(core.input, 
+                                       as.list(watershed.ids), 
+                                       fun = function(HUC) tryCatch(landscape_connectivity(status = "Current",
+                                                                                           native.type = native.class,
+                                                                                           watershed.costs = watershed.costs,
+                                                                                           dispersal.threshold = dispersal.threshold,
+                                                                                           HUC.scale = huc.unit,
+                                                                                           HUC.id = HUC,
+                                                                                           HFI.year = HFI,
+                                                                                           arcpy = arcpy,
+                                                                                           numpy = numpy), error = function(e) e)
+                             )
+                             
+                           }
 
-landscape.cleaning.time <- Sys.time() - start.time
+##########################
+# Reference Connectivity #
+##########################
 
-start.time <- Sys.time()
-# Calculate connectivity
-results.current[["Grassland"]] <- parLapply(core.input, 
-                                            as.list(watershed.ids), 
-                                            fun = function(HUC) tryCatch(landscape_connectivity(status = "Current",
-                                                                                                native.type = "Grassland",
-                                                                                                watershed.costs = watershed.costs,
-                                                                                                dispersal.threshold = dispersal.threshold,
-                                                                                                HUC.scale = huc.unit,
-                                                                                                HUC.id = HUC,
-                                                                                                HFI.year = HFI,
-                                                                                                arcpy = arcpy,
-                                                                                                numpy = numpy), error = function(e) e)
-)
+results.reference <- foreach(native.class = c("Grassland", "LowlandForest", "UplandForest"),
+                             .final = function(x) setNames(x, c("Grassland", "LowlandForest", "UplandForest"))) %dopar% {
+                               
+                               parLapply(core.input, 
+                                         as.list(watershed.ids), 
+                                         fun = function(HUC) tryCatch(landscape_connectivity(status = "Reference",
+                                                                                             native.type = native.class,
+                                                                                             watershed.costs = watershed.costs,
+                                                                                             dispersal.threshold = dispersal.threshold,
+                                                                                             HUC.scale = huc.unit,
+                                                                                             HUC.id = HUC,
+                                                                                             HFI.year = HFI,
+                                                                                             arcpy = arcpy,
+                                                                                             numpy = numpy), error = function(e) e)
+                               )
+                               
+                             }
 
-results.current[["LowlandForest"]] <- parLapply(core.input, 
-                                            as.list(watershed.ids), 
-                                            fun = function(HUC) tryCatch(landscape_connectivity(status = "Current",
-                                                                                                native.type = "LowlandForest",
-                                                                                                watershed.costs = watershed.costs,
-                                                                                                dispersal.threshold = dispersal.threshold,
-                                                                                                HUC.scale = huc.unit,
-                                                                                                HUC.id = HUC,
-                                                                                                HFI.year = HFI,
-                                                                                                arcpy = arcpy,
-                                                                                                numpy = numpy), error = function(e) e)
-)
 
-results.current[["UplandForest"]] <- parLapply(core.input, 
-                                            as.list(watershed.ids), 
-                                            fun = function(HUC) tryCatch(landscape_connectivity(status = "Current",
-                                                                                                native.type = "UplandForest",
-                                                                                                watershed.costs = watershed.costs,
-                                                                                                dispersal.threshold = dispersal.threshold,
-                                                                                                HUC.scale = huc.unit,
-                                                                                                HUC.id = HUC,
-                                                                                                HFI.year = HFI,
-                                                                                                arcpy = arcpy,
-                                                                                                numpy = numpy), error = function(e) e)
-)
-
-connect.time <- Sys.time() - start.time
-
-#############
-# Reference #
-#############
-
-start.time <- Sys.time()
-
-# Clean the landscapes
-parLapply(core.input, 
-          as.list(watershed.ids), 
-          fun = function(HUC) tryCatch(data_prep(status = "Reference",
-                                                 dispersal.distance = dispersal.distance,
-                                                 minimum.patch.size = minimum.patch.size, 
-                                                 harvest.recovery = recovery.curve,
-                                                 HUC.scale = huc.unit,
-                                                 HUC.id = HUC,
-                                                 HFI.year = HFI,
-                                                 arcpy = arcpy), error = function(e) e)
-)
-
-landscape.cleaning.time <- Sys.time() - start.time
-
-start.time <- Sys.time()
-# Calculate connectivity
-results.reference[["Grassland"]] <- parLapply(core.input, 
-                                            as.list(watershed.ids), 
-                                            fun = function(HUC) tryCatch(landscape_connectivity(status = "Reference",
-                                                                                                native.type = "Grassland",
-                                                                                                watershed.costs = watershed.costs,
-                                                                                                dispersal.threshold = dispersal.threshold,
-                                                                                                HUC.scale = huc.unit,
-                                                                                                HUC.id = HUC,
-                                                                                                HFI.year = HFI,
-                                                                                                arcpy = arcpy,
-                                                                                                numpy = numpy), error = function(e) e)
-)
-
-results.reference[["LowlandForest"]] <- parLapply(core.input, 
-                                                as.list(watershed.ids), 
-                                                fun = function(HUC) tryCatch(landscape_connectivity(status = "Reference",
-                                                                                                    native.type = "LowlandForest",
-                                                                                                    watershed.costs = watershed.costs,
-                                                                                                    dispersal.threshold = dispersal.threshold,
-                                                                                                    HUC.scale = huc.unit,
-                                                                                                    HUC.id = HUC,
-                                                                                                    HFI.year = HFI,
-                                                                                                    arcpy = arcpy,
-                                                                                                    numpy = numpy), error = function(e) e)
-)
-
-results.reference[["UplandForest"]] <- parLapply(core.input, 
-                                               as.list(watershed.ids), 
-                                               fun = function(HUC) tryCatch(landscape_connectivity(status = "Reference",
-                                                                                                   native.type = "UplandForest",
-                                                                                                   watershed.costs = watershed.costs,
-                                                                                                   dispersal.threshold = dispersal.threshold,
-                                                                                                   HUC.scale = huc.unit,
-                                                                                                   HUC.id = HUC,
-                                                                                                   HFI.year = HFI,
-                                                                                                   arcpy = arcpy,
-                                                                                                   numpy = numpy), error = function(e) e)
-)
-
-connect.time <- Sys.time() - start.time
 stopCluster(core.input)
 
 #######################
@@ -281,15 +218,15 @@ results.connect$Connect[results.connect$Connect > 100] <- 100 # Masking values g
 # Add comment information 
 comment(results.reference) <- c("Landscape connectivity analysis based on the 2021 HFI",
                            "Backfill version 7.0", 
-                           "Started on October 23rd, 2023")
+                           "Started on November 19th, 2024")
 
 comment(results.current) <- c("Landscape connectivity analysis based on the 2021 HFI",
                                 "Backfill version 7.0", 
-                                "Started on October 23rd, 2023")
+                                "Started on November 19th, 2024")
 
 comment(results.connect) <- c("Landscape connectivity analysis based on the 2021 HFI",
                                 "Backfill version 7.0", 
-                                "Started on October 23rd, 2023")
+                                "Started on November 19th, 2024")
 
 # Save each watershed iteration
 save(results.reference, results.current, results.connect, file = paste0("results/tables/connectivity_HFI", HFI, ".RData"))
