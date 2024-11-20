@@ -1,7 +1,7 @@
 #
 # Title: Data cleaning functions
 # Created: November 24th, 2020
-# Last Updated: September 22nd, 2023
+# Last Updated: November 2nd, 2023
 # Author: Brandon Allen
 # Objectives: Functions required for cleaning the layers required for landscape connectivity
 # Keywords: Landscape cleaning, Cost assign, Cost distance
@@ -200,8 +200,10 @@ def Reclass(current, reference, year, hfiyear):
         return 'HARVEST-AREA-15'
     if current == 'HARVEST-AREA' and ((hfiyear - year) >= 80):
         return 'reference'
-    if current == 'HARVEST-AREA' and ((hfiyear - year) > 15) and ((hfiyear - year) < 80):
-        return 'HARVEST-AREA-{age}'.format(age = hfiyear - year)
+    if current == 'HARVEST-AREA' and ((hfiyear - year) > 15) and ((hfiyear - year) < 80) and reference == 'Deciduous':
+        return 'Deciduous-{age}'.format(age = hfiyear - year)
+    if current == 'HARVEST-AREA' and ((hfiyear - year) > 15) and ((hfiyear - year) < 80) and reference == 'Coniferous':
+        return 'Coniferous-{age}'.format(age = hfiyear - year)
     if current != '':
         return current"
   
