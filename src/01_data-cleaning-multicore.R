@@ -1,7 +1,7 @@
 #
 # Title: Data cleaning for the landscape connectivity indicator (Multicore)
 # Created: February 4th, 2022
-# Last Updated: October 13th, 2023
+# Last Updated: November 2nd, 2023
 # Author: Brandon Allen
 # Objectives: Clean GIS data required for creating the landscape connectivity indicator. 
 # Keywords: Notes, Initialization
@@ -26,6 +26,7 @@ rm(list=ls())
 gc()
 
 # Load libraries
+library(foreach)
 library(parallel)
 library(readxl)
 library(reticulate)
@@ -35,7 +36,7 @@ library(sf)
 source("src/data-cleaning_functions.R")
 
 # Define HUC units and HFI inventories
-HFI <- 2021
+hfi.series <- c(2010, 2018, 2019, 2020, 2021)
 huc.unit <- 8
 watershed.ids <- read_sf("data/base/gis/boundaries/HUC_8_EPSG3400.shp")
 watershed.ids <- watershed.ids$HUC_8
@@ -65,7 +66,7 @@ barrier.costs$GrasslandCost[match(c("LowlandForest", "UplandForest", "Coniferous
 # Define the cores for parallel processing
 n.clusters <- 14
 core.input <- makeCluster(n.clusters)
-clusterExport(core.input, c("huc.unit", "HFI", "barrier.costs", "landscape_cleaning", "cost_assign", "cost_distance"))
+clusterExport(core.input, c("huc.unit", "barrier.costs", "landscape_cleaning", "cost_assign", "cost_distance"))
 clusterEvalQ(core.input, {
   
   # Load libraries
@@ -94,102 +95,102 @@ clusterEvalQ(core.input, {
 # Landscape Extraction #
 ########################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-start.time <- Sys.time()
-
-# Clean the landscapes
-parLapply(core.input, 
-          as.list(watershed.ids), 
-          fun = function(HUC) tryCatch(landscape_cleaning(landcover.layer = paste0("D:/backfill/Version7.0/gdb_veghf_reference_condition_", HFI, ".gdb/veghf_", HFI, ""),
-                                                        boundary.layer = "data/base/gis/boundaries/HUC_8_EPSG3400.shp",
-                                                        wildlife.layer = "data/base/wildlife-crossings/wildlife_crossings_100m.shp",
-                                                        HUC.scale = huc.unit,
-                                                        HUC.id = HUC,
-                                                        arcpy = arcpy,
-                                                        HFI.year = HFI), error = function(e) e)
-)
-
-landscape.cleaning.time <- Sys.time() - start.time
-start.time <- Sys.time()
-
-# Assign costs
-parLapply(core.input, 
-          as.list(watershed.ids), 
-          fun = function(HUC) tryCatch(cost_assign(barrier.lookup = barrier.costs,
-                                                   HUC.scale = huc.unit,
-                                                   HUC.id = HUC,
-                                                   arcpy = arcpy,
-                                                   HFI.year = HFI), error = function(e) e)
-)
-
-cost.assign.time <- Sys.time() - start.time
-start.time <- Sys.time()
-
-# Calculate costs
-parLapply(core.input, 
-          as.list(watershed.ids), 
-          fun = function(HUC) tryCatch(cost_distance(status = "reference",
+# Clean the landscapes for each inventory
+foreach(hfi = hfi.series) %dopar% 
+  
+  parLapply(core.input, 
+            as.list(watershed.ids), 
+            fun = function(HUC) tryCatch(landscape_cleaning(landcover.layer = paste0("D:/backfill/Version7.0/gdb_veghf_reference_condition_", hfi, ".gdb/veghf_", hfi, ""),
+                                                            boundary.layer = "data/base/gis/boundaries/HUC_8_EPSG3400.shp",
+                                                            wildlife.layer = "data/base/wildlife-crossings/wildlife_crossings_100m.shp",
+                                                            HUC.scale = huc.unit,
+                                                            HUC.id = HUC,
+                                                            arcpy = arcpy,
+                                                            HFI.year = hfi), error = function(e) e)
+  )
+  
+# Assign costs for each inventory
+foreach(hfi = hfi.series) %dopar% 
+  
+  parLapply(core.input, 
+            as.list(watershed.ids), 
+            fun = function(HUC) tryCatch(cost_assign(barrier.lookup = barrier.costs,
                                                      HUC.scale = huc.unit,
                                                      HUC.id = HUC,
                                                      arcpy = arcpy,
-                                                     HFI.year = HFI), error = function(e) e)
-)
+                                                     HFI.year = hfi), error = function(e) e)
+  )
 
-reference.cost.time <- Sys.time() - start.time
-start.time <- Sys.time()
 
-parLapply(core.input, 
-          as.list(watershed.ids), 
-          fun = function(HUC) tryCatch(cost_distance(status = "current",
-                                                     HUC.scale = huc.unit,
-                                                     HUC.id = HUC,
-                                                     arcpy = arcpy,
-                                                     HFI.year = HFI), error = function(e) e)
-)
+# Calculate costs for each inventory under reference condition
+foreach(hfi = hfi.series) %dopar%  
+  
+  parLapply(core.input, 
+            as.list(watershed.ids), 
+            fun = function(HUC) tryCatch(cost_distance(status = "reference",
+                                                       HUC.scale = huc.unit,
+                                                       HUC.id = HUC,
+                                                       arcpy = arcpy,
+                                                       HFI.year = hfi), error = function(e) e)
+  )
 
-current.cost.time <- Sys.time() - start.time
-start.time <- Sys.time()
+# Calculate costs for each inventory under current condition
+foreach(hfi = hfi.series) %dopar%  
+  
+  parLapply(core.input, 
+            as.list(watershed.ids), 
+            fun = function(HUC) tryCatch(cost_distance(status = "current",
+                                                       HUC.scale = huc.unit,
+                                                       HUC.id = HUC,
+                                                       arcpy = arcpy,
+                                                       HFI.year = hfi), error = function(e) e)
+  )
 
 stopCluster(core.input)
 
-landscape.cleaning.time
-cost.assign.time
-reference.cost.time
-current.cost.time
+#
+# Store move cost results in shapefile
+#
 
-# Load shapefile for storing the results
-# No movement cost should ever be 0, so this will flag if watersheds are not processed
-move.costs <- read_sf("data/base/gis/boundaries/HUC_8_EPSG3400.shp")
-move.costs$UpCur <- 0 
-move.costs$LowCur <- 0 
-move.costs$GrCur <- 0 
-move.costs$UpRef <- 0 
-move.costs$LowRef <- 0 
-move.costs$GrRef <- 0 
-
-# Determine files that were created
-results.list <- list.files(paste0("data/processed/huc-8/", HFI, "/movecost/"), full.names = TRUE)
-
-# Data packaging
-for(watershed in watershed.ids) {
+for (HFI in hfi.series) {
   
-  # Current
-  load(results.list[grep(paste0("current-", watershed, ".Rdata"), results.list)])
-  move.costs[move.costs$HUC_8 == watershed, "UpCur"] <- move.results[, "UFSource"]
-  move.costs[move.costs$HUC_8 == watershed, "LowCur"] <- move.results[, "LFSource"]
-  move.costs[move.costs$HUC_8 == watershed, "GrCur"] <- move.results[, "GSource"]
+  # Load shapefile for storing the results
+  # No movement cost should ever be 0, so this will flag if watersheds are not processed
+  move.costs <- read_sf("data/base/gis/boundaries/HUC_8_EPSG3400.shp")
+  move.costs$UpCur <- 0 
+  move.costs$LowCur <- 0 
+  move.costs$GrCur <- 0 
+  move.costs$UpRef <- 0 
+  move.costs$LowRef <- 0 
+  move.costs$GrRef <- 0 
   
-  # Reference
-  load(results.list[grep(paste0("reference-", watershed, ".Rdata"), results.list)])
-  move.costs[move.costs$HUC_8 == watershed, "UpRef"] <- move.results[, "UFSource"]
-  move.costs[move.costs$HUC_8 == watershed, "LowRef"] <- move.results[, "LFSource"]
-  move.costs[move.costs$HUC_8 == watershed, "GrRef"] <- move.results[, "GSource"]
+  # Determine files that were created
+  results.list <- list.files(paste0("data/processed/huc-8/", HFI, "/movecost/"), full.names = TRUE)
+  
+  # Data packaging
+  for(watershed in watershed.ids) {
+    
+    # Current
+    load(results.list[grep(paste0("current-", watershed, ".Rdata"), results.list)])
+    move.costs[move.costs$HUC_8 == watershed, "UpCur"] <- move.results[, "UFSource"]
+    move.costs[move.costs$HUC_8 == watershed, "LowCur"] <- move.results[, "LFSource"]
+    move.costs[move.costs$HUC_8 == watershed, "GrCur"] <- move.results[, "GSource"]
+    
+    # Reference
+    load(results.list[grep(paste0("reference-", watershed, ".Rdata"), results.list)])
+    move.costs[move.costs$HUC_8 == watershed, "UpRef"] <- move.results[, "UFSource"]
+    move.costs[move.costs$HUC_8 == watershed, "LowRef"] <- move.results[, "LFSource"]
+    move.costs[move.costs$HUC_8 == watershed, "GrRef"] <- move.results[, "GSource"]
+    
+  }
+  
+  # Store results
+  write_sf(obj = move.costs,
+           dsn = paste0("data/processed/huc-", huc.unit, "/", HFI, "/movecost/huc-", huc.unit, "-movecost_", HFI, ".shp"),
+           quiet = TRUE)
+  
   
 }
-
-# Store results
-write_sf(obj = move.costs,
-         dsn = paste0("data/processed/huc-", huc.unit, "/", HFI, "/movecost/huc-", huc.unit, "-movecost_", HFI, ".shp"),
-         quiet = TRUE)
 
 rm(list=ls())
 gc()
