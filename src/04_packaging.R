@@ -35,6 +35,8 @@ load("results/tables/connectivity_HFI2020.RData")
 landscape.connecivity.2020 <- results.connect
 load("results/tables/connectivity_HFI2021.RData")
 landscape.connecivity.2021 <- results.connect
+load("results/tables/connectivity_HFI2022.RData")
+landscape.connecivity.2022 <- results.connect
 
 rm(results.connect, results.current, results.reference)
 
@@ -47,6 +49,7 @@ landscape.connecivity.2018 <- landscape.connecivity.2018[connectivity.results$HU
 landscape.connecivity.2019 <- landscape.connecivity.2019[connectivity.results$HUC_8, ]
 landscape.connecivity.2020 <- landscape.connecivity.2020[connectivity.results$HUC_8, ]
 landscape.connecivity.2021 <- landscape.connecivity.2021[connectivity.results$HUC_8, ]
+landscape.connecivity.2022 <- landscape.connecivity.2022[connectivity.results$HUC_8, ]
 
 # Select attributes
 connectivity.results <- connectivity.results[, c("HUC_8", "HUC_6", "HUC_4", "HUC_2")]
@@ -57,6 +60,7 @@ connectivity.results$LC2018 <- landscape.connecivity.2018$Connect
 connectivity.results$LC2019 <- landscape.connecivity.2019$Connect
 connectivity.results$LC2020 <- landscape.connecivity.2020$Connect
 connectivity.results$LC2021 <- landscape.connecivity.2021$Connect
+connectivity.results$LC2022 <- landscape.connecivity.2022$Connect
 
 # Add the Upland forest results
 connectivity.results$Upland2010 <- (landscape.connecivity.2010$UplandForestCur / landscape.connecivity.2010$UplandForestRef) * 100
@@ -64,6 +68,7 @@ connectivity.results$Upland2018 <- (landscape.connecivity.2018$UplandForestCur /
 connectivity.results$Upland2019 <- (landscape.connecivity.2019$UplandForestCur / landscape.connecivity.2019$UplandForestRef) * 100
 connectivity.results$Upland2020 <- (landscape.connecivity.2020$UplandForestCur / landscape.connecivity.2020$UplandForestRef) * 100
 connectivity.results$Upland2021 <- (landscape.connecivity.2021$UplandForestCur / landscape.connecivity.2021$UplandForestRef) * 100
+connectivity.results$Upland2022 <- (landscape.connecivity.2022$UplandForestCur / landscape.connecivity.2022$UplandForestRef) * 100
 
 # Add the lowland forest results
 connectivity.results$Low2010 <- (landscape.connecivity.2010$LowlandForestCur / landscape.connecivity.2010$LowlandForestRef) * 100
@@ -71,6 +76,7 @@ connectivity.results$Low2018 <- (landscape.connecivity.2018$LowlandForestCur / l
 connectivity.results$Low2019 <- (landscape.connecivity.2019$LowlandForestCur / landscape.connecivity.2019$LowlandForestRef) * 100
 connectivity.results$Low2020 <- (landscape.connecivity.2020$LowlandForestCur / landscape.connecivity.2020$LowlandForestRef) * 100
 connectivity.results$Low2021 <- (landscape.connecivity.2021$LowlandForestCur / landscape.connecivity.2021$LowlandForestRef) * 100
+connectivity.results$Low2022 <- (landscape.connecivity.2022$LowlandForestCur / landscape.connecivity.2022$LowlandForestRef) * 100
 
 # Add the grassland results
 connectivity.results$Grass2010 <- (landscape.connecivity.2010$GrasslandCur / landscape.connecivity.2010$GrasslandRef) * 100
@@ -78,6 +84,7 @@ connectivity.results$Grass2018 <- (landscape.connecivity.2018$GrasslandCur / lan
 connectivity.results$Grass2019 <- (landscape.connecivity.2019$GrasslandCur / landscape.connecivity.2019$GrasslandRef) * 100
 connectivity.results$Grass2020 <- (landscape.connecivity.2020$GrasslandCur / landscape.connecivity.2020$GrasslandRef) * 100
 connectivity.results$Grass2021 <- (landscape.connecivity.2021$GrasslandCur / landscape.connecivity.2021$GrasslandRef) * 100
+connectivity.results$Grass2022 <- (landscape.connecivity.2022$GrasslandCur / landscape.connecivity.2022$GrasslandRef) * 100
 
 # Truncate values to 100 percent as a few have rounding errors
 for(column.id in colnames(connectivity.results)[6:25]) {
@@ -94,7 +101,7 @@ for(column.id in colnames(connectivity.results)[6:25]) {
 }
 
 # Save
-write_sf(connectivity.results, dsn = "results/gis/landscape_connectivity_2010_2021.shp")
+write_sf(connectivity.results, dsn = "results/gis/landscape_connectivity_2010_2022.shp")
 
 # Clear memory
 rm(list=ls())
