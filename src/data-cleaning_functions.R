@@ -15,7 +15,7 @@
 # Landscape cleaning # 
 ######################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-landscape_cleaning <- function(landcover.layer, boundary.layer, wildlife.layer, HUC.scale, HUC.id, HFI.year, arcpy) {
+landscape_cleaning <- function(landcover.layer, boundary.layer, wildlife.layer, forestry.repair, HUC.scale, HUC.id, HFI.year, arcpy) {
   
   ################## Question: Should we buffer the human footprint layer to remove artifacts?
   # DECISION POINT # Implementation: We perform a 5m and -5m buffer to remove artifacts that would impact patch delineation
@@ -86,6 +86,127 @@ landscape_cleaning <- function(landcover.layer, boundary.layer, wildlife.layer, 
   arcpy$Delete_management("wildlife_crossing")
   arcpy$Delete_management("landcover_nocrossing")
 
+  ################################# HFI 2022 reclassified forestry footprint. This section standardizes the
+  # Repair the forestry footprint # Forestry polygons across years
+  #################################
+  
+  if (forestry.repair == TRUE) {
+    
+    # If 2022, just copy and clean
+    if(HFI.year == 2022) {
+      
+      # Correct the naming convention in the new harvest polygons ("HARVEST-AREA")
+      cursor <- arcpy$da$UpdateCursor(in_table = "landcover", 
+                                      field_names = c("FEATURE_TY", "YEAR"), 
+                                      where_clause = "FEATURE_TY IN ('TIMBER-HARVEST-GREEN-AREA', 'TIMBER-HARVEST-WHITE-AREA')")
+      
+      # Update each row in the cursor
+      row <- iter_next(cursor)
+      while (!is.null(row)) {
+        
+        # Update Feature Type
+        row[[1]] <- "HARVEST-AREA"
+        
+        # Update the value
+        cursor$updateRow(row)
+        
+        # Go to the next row
+        row <- iter_next(cursor)  
+        
+      }
+      
+      rm(row, cursor)
+      
+    } else {
+      
+      # Otherwise perform the standardization
+      
+      # Select the potential harvest area polygons from the layer of interest
+      arcpy$Select_analysis(in_features = "landcover", 
+                            out_feature_class = "potential_harvest", 
+                            where_clause = "FEATURE_TY IN ('HARVEST-AREA', 'HARVEST-AREA-WHITE-ZONE')")
+      
+      # Select the harvest area polygons from the 2022 HFI
+      arcpy$Select_analysis(in_features = "K:/Anthropogenic/HumanFootprint/HFI/HFI_2022/HFI2022_v1_1.gdb/HFI2022", 
+                            out_feature_class = "harvest_2022", 
+                            where_clause = "FEATURE_TY IN ('TIMBER-HARVEST-GREEN-AREA', 'TIMBER-HARVEST-WHITE-AREA')")
+      
+      # Clip the potential polygons to the extent of the 2022 harvest
+      arcpy$PairwiseClip_analysis(in_features = "potential_harvest", 
+                                  clip_features = "harvest_2022",
+                                  out_feature_class = "harvest")
+      
+      # Erase the defined harvest areas from the original focal year to isolate permanent polygons that
+      # are in a transition to another feature type.
+      arcpy$PairwiseErase_analysis(in_features = "potential_harvest", 
+                                   erase_features = "harvest", 
+                                   out_feature_class = "disturbance")
+      
+      # Correct the naming convention in the new harvest polygons ("HARVEST-AREA")
+      cursor <- arcpy$da$UpdateCursor(in_table = "harvest", 
+                                      field_names = c("FEATURE_TY", "YEAR"))
+      
+      # Update each row in the cursor
+      row <- iter_next(cursor)
+      while (!is.null(row)) {
+        
+        # Update Feature Type
+        row[[1]] <- "HARVEST-AREA"
+        
+        # Update the value
+        cursor$updateRow(row)
+        
+        # Go to the next row
+        row <- iter_next(cursor)  
+        
+      }
+      
+      # Clear row and cursor
+      rm(row, cursor)
+      
+      # Correct the naming convention in the remaining disturbed polygons ("WOODY-VEGETATION-REMOVAL")
+      cursor <- arcpy$da$UpdateCursor(in_table = "disturbance", 
+                                      field_names = c("FEATURE_TY", "YEAR"))
+      
+      # Update each row in the cursor
+      row <- iter_next(cursor)
+      while (!is.null(row)) {
+        
+        # Update Feature Type
+        row[[1]] <-"WOODY-VEGETATION-REMOVAL"
+        
+        # Update the value
+        cursor$updateRow(row)
+        
+        # Go to the next row
+        row <- iter_next(cursor)  
+        
+      }
+      
+      # Clear row and cursor
+      rm(row, cursor)
+      
+      # Create a new HFI layer with the harvest areas erased
+      arcpy$PairwiseErase_analysis(in_features = "landcover", 
+                                   erase_features = "potential_harvest", 
+                                   out_feature_class = "hfi_no_harvest")
+      
+      arcpy$Delete_management(in_data = "landcover")
+      
+      # Add the newly updated harvest and disturbed polygons
+      arcpy$Merge_management(inputs = "hfi_no_harvest; disturbance; harvest", 
+                             output = "landcover")
+      
+      arcpy$Delete_management(in_data = "harvest")
+      arcpy$Delete_management(in_data = "harvest_2022")
+      arcpy$Delete_management(in_data = "potential_harvest")
+      arcpy$Delete_management(in_data = "disturbance")
+      arcpy$Delete_management(in_data = "hfi_no_harvest")
+      
+    }
+    
+  }
+  
   ############################
   # Simplify landcover layer #
   ############################
