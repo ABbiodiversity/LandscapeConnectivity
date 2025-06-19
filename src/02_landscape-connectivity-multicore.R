@@ -41,7 +41,7 @@ dispersal.threshold <- log(0.05) / dispersal.distance
 minimum.patch.size <- 10000
 
 # Define HUC units, and cost matrix
-HFI <- 2021
+HFI <- 2022
 huc.unit <- 8
 watershed.costs <- read_sf(paste0("data/processed/huc-8/", HFI, "/movecost/huc-8-movecost_", HFI, ".shp"))
 watershed.ids <- unique(watershed.costs$HUC_8)
@@ -74,8 +74,8 @@ clusterEvalQ(core.input, {
   library(sf)
   
   # Initialize arcpy
-  py_discover_config() # We need version 3.9
-  py_config() # Double check it is version 3.9
+  # py_discover_config() # We need version 3.9
+  # py_config() # Double check it is version 3.9
   
   # Set python 
   use_python(python = "C:/Users/ballen/AppData/Local/r-miniconda/envs/r-reticulate/python.exe")
@@ -216,17 +216,17 @@ results.connect$Connect <- rowSums(results.connect[, c("UplandForestW", "Lowland
 results.connect$Connect[results.connect$Connect > 100] <- 100 # Masking values greater than 100 do to rounding error.
 
 # Add comment information 
-comment(results.reference) <- c("Landscape connectivity analysis based on the 2021 HFI",
+comment(results.reference) <- c("Landscape connectivity analysis based on the 2022 HFI",
                            "Backfill version 7.0", 
-                           "Started on November 19th, 2024")
+                           "Started on May 22nd, 2025")
 
-comment(results.current) <- c("Landscape connectivity analysis based on the 2021 HFI",
+comment(results.current) <- c("Landscape connectivity analysis based on the 2022 HFI",
                                 "Backfill version 7.0", 
-                                "Started on November 19th, 2024")
+                                "Started on May 22nd, 2025")
 
-comment(results.connect) <- c("Landscape connectivity analysis based on the 2021 HFI",
+comment(results.connect) <- c("Landscape connectivity analysis based on the 2022 HFI",
                                 "Backfill version 7.0", 
-                                "Started on November 19th, 2024")
+                                "Started on May 22nd, 2025")
 
 # Save each watershed iteration
 save(results.reference, results.current, results.connect, file = paste0("results/tables/connectivity_HFI", HFI, ".RData"))

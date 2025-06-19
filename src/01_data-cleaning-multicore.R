@@ -36,7 +36,7 @@ library(sf)
 source("src/data-cleaning_functions.R")
 
 # Define HUC units and HFI inventories
-hfi.series <- c(2010, 2018, 2019, 2020, 2021)
+hfi.series <- c(2010, 2018, 2019, 2020, 2021, 2022)
 huc.unit <- 8
 watershed.ids <- read_sf("data/base/gis/boundaries/HUC_8_EPSG3400.shp")
 watershed.ids <- watershed.ids$HUC_8
@@ -75,8 +75,8 @@ clusterEvalQ(core.input, {
   library(raster)
   
   # Initialize arcpy
-  py_discover_config() # We need version 3.9
-  py_config() # Double check it is version 3.9
+  # py_discover_config() # We need version 3.9
+  # py_config() # Double check it is version 3.9
   
   # Set python 
   use_python(python = "C:/Users/ballen/AppData/Local/r-miniconda/envs/r-reticulate/python.exe")
@@ -96,19 +96,33 @@ clusterEvalQ(core.input, {
 ########################~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # Clean the landscapes for each inventory
-foreach(hfi = hfi.series) %dopar% 
+foreach(hfi = c(2010, 2018, 2019, 2020, 2021)) %dopar% 
   
   parLapply(core.input, 
             as.list(watershed.ids), 
             fun = function(HUC) tryCatch(landscape_cleaning(landcover.layer = paste0("D:/backfill/Version7.0/gdb_veghf_reference_condition_", hfi, ".gdb/veghf_", hfi, ""),
                                                             boundary.layer = "data/base/gis/boundaries/HUC_8_EPSG3400.shp",
                                                             wildlife.layer = "data/base/wildlife-crossings/wildlife_crossings_100m.shp",
+                                                            forestry.repair = TRUE, 
                                                             HUC.scale = huc.unit,
                                                             HUC.id = HUC,
                                                             arcpy = arcpy,
                                                             HFI.year = hfi), error = function(e) e)
   )
-  
+
+# Different location for HFI 2022
+parLapply(core.input, 
+          as.list(watershed.ids), 
+          fun = function(HUC) tryCatch(landscape_cleaning(landcover.layer = "K:/Landcover/Backfill/backfilledV71/Backfill_veghf_V71_2022_final_rev01.gdb/veghf_V71_2022",
+                                                          boundary.layer = "data/base/gis/boundaries/HUC_8_EPSG3400.shp",
+                                                          wildlife.layer = "data/base/wildlife-crossings/wildlife_crossings_100m.shp",
+                                                          forestry.repair = TRUE, 
+                                                          HUC.scale = huc.unit,
+                                                          HUC.id = HUC,
+                                                          arcpy = arcpy,
+                                                          HFI.year = 2022), error = function(e) e))
+
+
 # Assign costs for each inventory
 foreach(hfi = hfi.series) %dopar% 
   
